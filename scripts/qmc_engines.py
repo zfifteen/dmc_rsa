@@ -1,15 +1,30 @@
 #!/usr/bin/env python3
 """
 QMC Engines Module - Enhanced QMC capabilities with replicated randomization
-Implements Sobol with Owen scrambling and Halton with Faure permutations
+Implements Sobol with Owen scrambling, Halton with Faure permutations,
+and rank-1 lattice constructions from group theory
 October 2025
 """
 
 from dataclasses import dataclass
-from typing import Callable, Iterable, Tuple, Generator
+from typing import Callable, Iterable, Tuple, Generator, Optional
 import numpy as np
 import warnings
 from scipy.stats import qmc  # pip install scipy
+
+# Import rank-1 lattice module
+try:
+    from rank1_lattice import (
+        Rank1LatticeConfig, generate_rank1_lattice,
+        compute_lattice_quality_metrics
+    )
+    RANK1_AVAILABLE = True
+except ImportError:
+    RANK1_AVAILABLE = False
+    warnings.warn(
+        "rank1_lattice module not available. Rank-1 lattice engine will not be available.",
+        ImportWarning
+    )
 
 
 def _is_power_of_two(n: int) -> bool:
@@ -70,11 +85,14 @@ class QMCConfig:
     """Configuration for QMC engine with replicated randomization"""
     dim: int
     n: int
-    engine: str = "sobol"     # "sobol" | "halton"
+    engine: str = "sobol"     # "sobol" | "halton" | "rank1_lattice"
     scramble: bool = True     # Owen for Sobol, Faure/QR for Halton (scipy implements)
     seed: int | None = None
     replicates: int = 8       # Cranley-Patterson: use random_base for shifts
     auto_round_sobol: bool = True  # Automatically round to power of 2 for Sobol
+    # Rank-1 lattice specific parameters
+    lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic"
+    subgroup_order: int | None = None  # For cyclic generator (defaults to φ(n)/2)
 
 def make_engine(cfg: QMCConfig):
     """
@@ -83,11 +101,13 @@ def make_engine(cfg: QMCConfig):
     For Sobol sequences, validates that n is a power of 2 for optimal balance properties.
     If not and auto_round_sobol is True, automatically rounds to next power of 2 with a warning.
     
+    For rank-1 lattices, returns a custom wrapper that generates lattice points.
+    
     Args:
         cfg: QMCConfig instance with engine parameters
         
     Returns:
-        scipy.stats.qmc sampler instance
+        scipy.stats.qmc sampler instance or Rank1LatticeEngine wrapper
         
     Raises:
         ValueError: If engine type is unsupported or if Sobol n is not power of 2
@@ -115,8 +135,67 @@ def make_engine(cfg: QMCConfig):
         return qmc.Sobol(d=cfg.dim, scramble=cfg.scramble, seed=cfg.seed)
     elif cfg.engine == "halton":
         return qmc.Halton(d=cfg.dim, scramble=cfg.scramble, seed=cfg.seed)
+    elif cfg.engine == "rank1_lattice":
+        if not RANK1_AVAILABLE:
+            raise ValueError(
+                "Rank-1 lattice engine requires rank1_lattice module. "
+                "Module import failed."
+            )
+        return Rank1LatticeEngine(cfg)
     else:
         raise ValueError(f"Unsupported engine: {cfg.engine}")
+
+class Rank1LatticeEngine:
+    """
+    Wrapper class for rank-1 lattice engine to match scipy.stats.qmc interface.
+    
+    This allows rank-1 lattices to be used seamlessly with existing QMC code
+    that expects scipy-style engines with a random() method.
+    """
+    
+    def __init__(self, cfg: QMCConfig):
+        """Initialize rank-1 lattice engine with configuration"""
+        if not RANK1_AVAILABLE:
+            raise ImportError("rank1_lattice module not available")
+        
+        self.cfg = cfg
+        self.lattice_cfg = Rank1LatticeConfig(
+            n=cfg.n,
+            d=cfg.dim,
+            subgroup_order=cfg.subgroup_order,
+            generator_type=cfg.lattice_generator,
+            seed=cfg.seed,
+            scramble=cfg.scramble
+        )
+        self._points_cache = None
+        
+    def random(self, n: Optional[int] = None) -> np.ndarray:
+        """
+        Generate rank-1 lattice points.
+        
+        Args:
+            n: Number of points to generate (must match config.n for lattices)
+            
+        Returns:
+            Array of shape (n, d) with lattice points in [0,1)^d
+        """
+        if n is not None and n != self.cfg.n:
+            warnings.warn(
+                f"Rank-1 lattice size is fixed at {self.cfg.n}. "
+                f"Requested {n} points, returning {self.cfg.n} points.",
+                UserWarning
+            )
+        
+        # Generate lattice points (cache for efficiency)
+        if self._points_cache is None:
+            self._points_cache = generate_rank1_lattice(self.lattice_cfg)
+        
+        return self._points_cache.copy()
+    
+    def reset(self):
+        """Reset the lattice engine (clear cache)"""
+        self._points_cache = None
+
 
 def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
     """
