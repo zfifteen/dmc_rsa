@@ -16,6 +16,7 @@ FIXES IMPLEMENTED:
 import numpy as np
 import pandas as pd
 from scipy import stats
+from scipy.stats import qmc
 from typing import List, Tuple, Dict, Optional
 import time
 import hashlib
@@ -155,8 +156,8 @@ class QMCFactorization:
             else:
                 shift1, shift2 = cranley_patterson_shift
             
-            u1 = QMCFactorization.halton_sequence(num_samples, halton_bases[0], shift1)
-            u2 = QMCFactorization.halton_sequence(num_samples, halton_bases[1], shift2)
+            u1 = QMCFactorization.sobol_sequence(num_samples)
+            u2 = QMCFactorization.sobol_sequence(num_samples)
         else:
             raise ValueError(f"Unknown method: {method}")
         

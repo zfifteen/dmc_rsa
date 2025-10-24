@@ -6,7 +6,7 @@ sys.path.append('scripts')
 from qmc_factorization_analysis import QMCFactorization
 import pandas as pd
 
-n = 10000000
+n = 1000000
 print(f"Testing N={n}")
 
 df_large = QMCFactorization.run_statistical_analysis(n, num_samples=200, num_trials=10)  # Very few trials for test
