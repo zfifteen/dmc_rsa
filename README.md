@@ -49,16 +49,21 @@ For detailed results, see [docs/QMC_RSA_SUMMARY.md](docs/QMC_RSA_SUMMARY.md).
 
 ### Python Analysis
 - Python 3.7+
-- NumPy
-- Pandas
-- SciPy (>=1.7 for QMC support)
+- NumPy >= 1.20.0
+- Pandas >= 1.3.0
+- SciPy >= 1.7.0 (for QMC support with Owen scrambling)
 
 Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Or manually:
 ```bash
 pip install numpy pandas scipy
 ```
 
-**Note:** The enhanced QMC features require scipy.stats.qmc, available in SciPy 1.7+.
+**Note:** The enhanced QMC features require scipy.stats.qmc with Sobol/Owen scrambling, available in SciPy 1.7+.
 
 ### Web Demos
 - Modern web browser with JavaScript enabled

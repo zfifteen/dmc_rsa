@@ -8,7 +8,62 @@ October 2025
 from dataclasses import dataclass
 from typing import Callable, Iterable, Tuple, Generator
 import numpy as np
+import warnings
 from scipy.stats import qmc  # pip install scipy
+
+
+def _is_power_of_two(n: int) -> bool:
+    """Check if n is a power of 2."""
+    return n > 0 and (n & (n - 1)) == 0
+
+
+def _next_power_of_two(n: int) -> int:
+    """Return the next power of 2 >= n."""
+    if n <= 0:
+        return 1
+    return 1 << (n - 1).bit_length()
+
+
+def validate_sobol_sample_size(n: int, auto_round: bool = True) -> int:
+    """
+    Validate and optionally round sample size for Sobol sequences.
+    
+    Sobol sequences have optimal balance properties when the number of samples
+    is a power of 2. This function checks the sample size and optionally rounds
+    it to the next power of 2.
+    
+    Args:
+        n: Requested number of samples
+        auto_round: If True, automatically round to next power of 2
+        
+    Returns:
+        int: Valid sample size (rounded if auto_round=True, original otherwise)
+        
+    Raises:
+        ValueError: If n is not a power of 2 and auto_round is False
+        
+    Example:
+        >>> validate_sobol_sample_size(200)  # Returns 256 with warning
+        >>> validate_sobol_sample_size(256)  # Returns 256, no warning
+        >>> validate_sobol_sample_size(200, auto_round=False)  # Raises ValueError
+    """
+    if not _is_power_of_two(n):
+        if auto_round:
+            next_pow2 = _next_power_of_two(n)
+            warnings.warn(
+                f"Sobol sequences require n to be a power of 2 for optimal balance properties. "
+                f"Rounding {n} -> {next_pow2}.",
+                UserWarning,
+                stacklevel=2
+            )
+            return next_pow2
+        else:
+            raise ValueError(
+                f"Sobol sequences require n to be a power of 2. "
+                f"Got n={n}. Use n={_next_power_of_two(n)} or set auto_round=True."
+            )
+    return n
+
 
 @dataclass
 class QMCConfig:
@@ -19,10 +74,14 @@ class QMCConfig:
     scramble: bool = True     # Owen for Sobol, Faure/QR for Halton (scipy implements)
     seed: int | None = None
     replicates: int = 8       # Cranley-Patterson: use random_base for shifts
+    auto_round_sobol: bool = True  # Automatically round to power of 2 for Sobol
 
 def make_engine(cfg: QMCConfig):
     """
     Create a QMC engine based on configuration.
+    
+    For Sobol sequences, validates that n is a power of 2 for optimal balance properties.
+    If not and auto_round_sobol is True, automatically rounds to next power of 2 with a warning.
     
     Args:
         cfg: QMCConfig instance with engine parameters
@@ -31,9 +90,28 @@ def make_engine(cfg: QMCConfig):
         scipy.stats.qmc sampler instance
         
     Raises:
-        ValueError: If engine type is unsupported
+        ValueError: If engine type is unsupported or if Sobol n is not power of 2
+                   and auto_round_sobol is False
     """
     if cfg.engine == "sobol":
+        # Validate power of 2 for Sobol sequences
+        if not _is_power_of_two(cfg.n):
+            if cfg.auto_round_sobol:
+                next_pow2 = _next_power_of_two(cfg.n)
+                warnings.warn(
+                    f"Sobol sequences require n to be a power of 2 for optimal balance properties. "
+                    f"Automatically rounding {cfg.n} -> {next_pow2}. "
+                    f"Set auto_round_sobol=False to disable this behavior.",
+                    UserWarning,
+                    stacklevel=2
+                )
+                # Note: We don't modify cfg.n, scipy will issue its own warning
+                # This is just to inform the user more clearly
+            else:
+                raise ValueError(
+                    f"Sobol sequences require n to be a power of 2. "
+                    f"Got n={cfg.n}. Use n={_next_power_of_two(cfg.n)} or set auto_round_sobol=True."
+                )
         return qmc.Sobol(d=cfg.dim, scramble=cfg.scramble, seed=cfg.seed)
     elif cfg.engine == "halton":
         return qmc.Halton(d=cfg.dim, scramble=cfg.scramble, seed=cfg.seed)

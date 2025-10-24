@@ -157,6 +157,42 @@ def test_stratification_balance():
     print(f"  Stratification balance: {balance:.4f}")
     print("  ✓ Stratification balance metric works")
 
+def test_sobol_power_of_two_validation():
+    """Test Sobol power-of-two validation"""
+    print("Testing Sobol power-of-two validation...")
+    
+    from qmc_engines import validate_sobol_sample_size
+    
+    # Test power of 2 - should pass without warning
+    assert validate_sobol_sample_size(256) == 256
+    assert validate_sobol_sample_size(128) == 128
+    
+    # Test non-power of 2 with auto_round - should round up
+    assert validate_sobol_sample_size(200, auto_round=True) == 256
+    assert validate_sobol_sample_size(100, auto_round=True) == 128
+    
+    # Test non-power of 2 without auto_round - should raise
+    try:
+        validate_sobol_sample_size(200, auto_round=False)
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "power of 2" in str(e)
+    
+    # Test QMCConfig with auto_round_sobol
+    cfg_auto = QMCConfig(dim=2, n=200, engine="sobol", auto_round_sobol=True)
+    eng = make_engine(cfg_auto)  # Should warn but not fail
+    assert eng is not None
+    
+    # Test QMCConfig without auto_round_sobol
+    cfg_no_auto = QMCConfig(dim=2, n=200, engine="sobol", auto_round_sobol=False)
+    try:
+        make_engine(cfg_no_auto)
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "power of 2" in str(e)
+    
+    print("  ✓ Sobol power-of-two validation works correctly")
+
 def test_integration_with_rsa():
     """Integration test: generate candidates for RSA factorization"""
     print("Testing integration with RSA factorization...")
@@ -195,6 +231,7 @@ def main():
     test_map_points_to_candidates()
     test_estimate_l2_discrepancy()
     test_stratification_balance()
+    test_sobol_power_of_two_validation()
     test_integration_with_rsa()
     
     print("="*60)

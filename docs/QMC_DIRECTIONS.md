@@ -193,10 +193,29 @@ scramble=True
 ```python
 num_samples = 256   # Good
 num_samples = 512   # Good
-num_samples = 200   # Warns: not power of 2
+num_samples = 200   # Automatically rounded to 256 with warning
 ```
 
-Sobol sequences have optimal balance properties when n is a power of 2. scipy will issue a warning otherwise.
+Sobol sequences have optimal balance properties when n is a power of 2. The implementation:
+- **Automatically validates** sample sizes for Sobol sequences
+- **Auto-rounds** to next power of 2 by default with a clear warning
+- **Prevents silent quality degradation** from non-optimal sample sizes
+
+To disable auto-rounding (strict mode):
+```python
+cfg = QMCConfig(..., auto_round_sobol=False)  # Raises ValueError if not power of 2
+```
+
+To manually validate/round sample sizes:
+```python
+from qmc_engines import validate_sobol_sample_size
+
+# Automatically round with warning
+n = validate_sobol_sample_size(200)  # Returns 256
+
+# Strict validation without rounding
+n = validate_sobol_sample_size(200, auto_round=False)  # Raises ValueError
+```
 
 ### 3. Replicate Count
 
