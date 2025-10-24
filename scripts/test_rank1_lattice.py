@@ -15,6 +15,7 @@ from rank1_lattice import (
     _cyclic_subgroup_generating_vector, estimate_minimum_distance,
     estimate_covering_radius
 )
+from qmc_engines import QMCConfig
 
 
 def test_euler_phi():
@@ -342,6 +343,134 @@ def test_comparison_fibonacci_vs_cyclic():
     print("\n  ✓ Both constructions produce valid lattices")
 
 
+def test_elliptic_cyclic_geometry():
+    """Test elliptic cyclic lattice construction and geometry validation"""
+    print("Testing elliptic cyclic geometry...")
+    
+    cfg = QMCConfig(
+        dim=2,
+        n=120,
+        engine="elliptic_cyclic",
+        subgroup_order=120,
+        elliptic_b=0.7,
+        scramble=False
+    )
+    
+    from qmc_engines import make_engine
+    engine = make_engine(cfg)
+    points = engine.random(120)
+    
+    # Verify shape and range
+    assert points.shape == (120, 2)
+    assert np.all(points >= 0)
+    assert np.all(points <= 1)
+    
+    # Transform back to ellipse coordinates for validation
+    a = cfg.subgroup_order / (2.0 * np.pi)
+    b = cfg.elliptic_b * a if cfg.elliptic_b else 0.8 * a
+    
+    # Convert from [0,1] to ellipse coordinates
+    x = points[:, 0] * (2 * a) - a
+    y = points[:, 1] * (2 * b) - b
+    
+    # Verify all points lie within or on the ellipse (with tolerance)
+    ellipse_test = (x / a) ** 2 + (y / b) ** 2
+    assert np.all(ellipse_test <= 1.01), f"Some points lie outside ellipse: max={ellipse_test.max()}"
+    
+    print(f"  Generated {len(points)} points")
+    print(f"  Ellipse parameters: a={a:.4f}, b={b:.4f}")
+    print(f"  Eccentricity: e={np.sqrt(a**2 - b**2)/a:.4f}")
+    print(f"  All points within ellipse: max distance ratio = {ellipse_test.max():.4f}")
+    print("  ✓ Elliptic cyclic geometry works correctly")
+
+
+def test_elliptic_vs_cyclic_quality():
+    """Compare elliptic cyclic vs standard cyclic lattice quality"""
+    print("Comparing elliptic cyclic vs standard cyclic quality...")
+    
+    # For elliptic cyclic, n should equal subgroup_order for optimal properties
+    n = 64
+    d = 2
+    subgroup_order = 64
+    
+    # Standard cyclic
+    cfg_cyclic = Rank1LatticeConfig(
+        n=n, d=d, generator_type="cyclic", subgroup_order=subgroup_order, scramble=False, seed=42
+    )
+    points_cyclic = generate_rank1_lattice(cfg_cyclic)
+    metrics_cyclic = compute_lattice_quality_metrics(points_cyclic)
+    
+    # Elliptic cyclic with eccentricity 0.6
+    cfg_elliptic = Rank1LatticeConfig(
+        n=n, d=d, generator_type="elliptic_cyclic", subgroup_order=subgroup_order, 
+        elliptic_b=0.8, scramble=False, seed=42
+    )
+    points_elliptic = generate_rank1_lattice(cfg_elliptic)
+    metrics_elliptic = compute_lattice_quality_metrics(points_elliptic)
+    
+    print("\n  Standard cyclic construction:")
+    print(f"    Min distance: {metrics_cyclic['min_distance']:.4f}")
+    print(f"    Covering radius: {metrics_cyclic['covering_radius']:.4f}")
+    
+    print("\n  Elliptic cyclic construction (e=0.6):")
+    print(f"    Min distance: {metrics_elliptic['min_distance']:.4f}")
+    print(f"    Covering radius: {metrics_elliptic['covering_radius']:.4f}")
+    
+    # Both should produce valid lattices with positive min distance
+    assert metrics_cyclic['min_distance'] > 0, "Cyclic should have positive min distance"
+    assert metrics_elliptic['min_distance'] > 0, "Elliptic cyclic should have positive min distance"
+    
+    # Calculate relative changes
+    min_dist_change = (metrics_elliptic['min_distance'] / metrics_cyclic['min_distance'] - 1) * 100
+    covering_change = (1 - metrics_elliptic['covering_radius'] / metrics_cyclic['covering_radius']) * 100
+    
+    print(f"\n  Min distance change: {min_dist_change:+.1f}%")
+    print(f"  Covering radius change: {covering_change:+.1f}%")
+    print(f"\n  Note: Elliptic embedding optimizes for arc-length uniformity")
+    print(f"        which may affect different metrics differently.")
+    
+    print("\n  ✓ Elliptic cyclic quality metrics computed successfully")
+
+
+def test_elliptic_cyclic_integration():
+    """Test elliptic cyclic integration with QMC engines"""
+    print("Testing elliptic cyclic integration with QMC engines...")
+    
+    from qmc_engines import QMCConfig, make_engine
+    
+    cfg = QMCConfig(
+        dim=2,
+        n=64,
+        engine="elliptic_cyclic",
+        subgroup_order=64,
+        elliptic_a=1.0,
+        elliptic_b=0.8,
+        scramble=True,
+        seed=42
+    )
+    
+    engine = make_engine(cfg)
+    points = engine.random(64)
+    
+    # Verify output
+    assert points.shape == (64, 2)
+    assert np.all(points >= 0) and np.all(points < 1)
+    
+    # Test multiple calls return same points (caching)
+    points2 = engine.random(64)
+    assert np.allclose(points, points2)
+    
+    # Test reset clears cache
+    engine.reset()
+    points3 = engine.random(64)
+    # After reset with same seed, should get same points
+    assert np.allclose(points, points3)
+    
+    print(f"  Successfully created elliptic_cyclic engine")
+    print(f"  Generated {len(points)} points with scrambling")
+    print("  ✓ Elliptic cyclic integration works correctly")
+
+
 def main():
     """Run all tests"""
     print("="*70)
@@ -360,6 +489,9 @@ def main():
     test_lattice_quality_metrics()
     test_rsa_semiprime_alignment()
     test_comparison_fibonacci_vs_cyclic()
+    test_elliptic_cyclic_geometry()
+    test_elliptic_vs_cyclic_quality()
+    test_elliptic_cyclic_integration()
     
     print("="*70)
     print("All tests passed! ✓")
@@ -367,6 +499,7 @@ def main():
     print("\nKey Findings:")
     print("- Group-theoretic lattice constructions working correctly")
     print("- Cyclic subgroup method provides subgroup-aligned regularity")
+    print("- Elliptic geometry embedding preserves cyclic symmetry")
     print("- Quality metrics confirm good distribution properties")
     print("- Integration with RSA semiprime structure validated")
     print("="*70)

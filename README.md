@@ -25,9 +25,10 @@ Key features:
 - Confidence intervals from independent replicates
 - L2 discrepancy and stratification balance metrics
 - Smooth candidate mapping to preserve low-discrepancy properties
-- **NEW: Rank-1 lattice constructions with group-theoretic foundations**
+- **Rank-1 lattice constructions with group-theoretic foundations**
   - Cyclic subgroup-based generating vectors
   - Fibonacci and Korobov construction methods
+  - **NEW: Elliptic cyclic geometry embedding**
   - Lattice quality metrics (minimum distance, covering radius)
   - φ(N)-aware mappings for RSA semiprime structure
 
@@ -38,15 +39,22 @@ For detailed results, see [docs/QMC_RSA_SUMMARY.md](docs/QMC_RSA_SUMMARY.md).
 ```
 .
 ├── docs/
-│   └── QMC_RSA_SUMMARY.md          # Detailed implementation summary and findings
+│   ├── QMC_RSA_SUMMARY.md           # Detailed implementation summary and findings
+│   ├── RANK1_LATTICE_INTEGRATION.md # Rank-1 lattice documentation
+│   └── RANK1_IMPLEMENTATION_SUMMARY.md  # Rank-1 implementation details
 ├── demos/
-│   ├── qmc_rsa_demo_v2.html        # Interactive HTML demo (main)
-│   ├── grok.html                   # Alternative demo
+│   ├── qmc_rsa_demo_v2.html         # Interactive HTML demo (main)
+│   ├── grok.html                    # Alternative demo
 │   └── qmc_φ_biased_rsa_candidate_sampler_web_demo_react.jsx  # React component demo
 ├── scripts/
-│   └── qmc_factorization_analysis.py  # Python analysis script
+│   ├── qmc_factorization_analysis.py  # Python analysis script
+│   ├── rank1_lattice.py              # Rank-1 lattice construction module
+│   ├── qmc_engines.py                # Enhanced QMC engines
+│   ├── benchmark_elliptic.py         # Elliptic geometry benchmark
+│   └── demo_elliptic_geometry.py     # Elliptic geometry demonstration
 ├── reports/
 │   └── qmc_statistical_results_899.csv  # Benchmark results for N=899
+├── ELLIPTIC_INTEGRATION_SUMMARY.md  # Elliptic geometry integration summary
 └── README.md
 ```
 
@@ -101,6 +109,40 @@ This demonstrates:
 - Effect of Owen scrambling
 - Statistical significance testing
 - Usage recommendations
+
+### Running Rank-1 Lattice Tests (New)
+```bash
+# Unit tests for rank-1 lattice constructions
+python scripts/test_rank1_lattice.py
+
+# Elliptic geometry demonstration
+python scripts/demo_elliptic_geometry.py
+
+# Benchmark comparison
+python scripts/benchmark_elliptic.py
+```
+
+### Quick Example: Elliptic Cyclic Lattice
+```python
+from qmc_engines import QMCConfig, make_engine
+
+# Create elliptic cyclic lattice
+cfg = QMCConfig(
+    dim=2,
+    n=128,
+    engine="elliptic_cyclic",
+    subgroup_order=128,
+    elliptic_b=0.8,      # Eccentricity ~0.6
+    scramble=True,
+    seed=42
+)
+
+engine = make_engine(cfg)
+points = engine.random(128)
+
+# All points lie on ellipse: (x/a)² + (y/b)² ≤ 1
+# Optimized for elliptic arc-length uniformity
+```
 
 ### Quick Example: Replicated QMC Analysis
 ```python
