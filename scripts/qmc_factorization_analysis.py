@@ -442,7 +442,8 @@ class QMCFactorization:
     def run_statistical_analysis(n: int, num_samples: int = 200, 
                                 num_trials: int = 100,
                                 include_enhanced: bool = False,
-                                include_rank1: bool = False) -> pd.DataFrame:
+                                include_rank1: bool = False,
+                                include_eas: bool = False) -> pd.DataFrame:
         """
         Run comprehensive statistical analysis comparing all methods
         
@@ -452,6 +453,7 @@ class QMCFactorization:
             num_trials: Number of trials for bootstrap
             include_enhanced: If True, also include enhanced Sobol/Halton methods
             include_rank1: If True, also include rank-1 lattice methods
+            include_eas: If True, also include Elliptic Adaptive Search method
         """
         methods = [
             ('MC', 'mc', False),
@@ -607,6 +609,64 @@ class QMCFactorization:
                 stats['num_trials'] = num_trials
                 
                 results.append(stats)
+        
+        # Add EAS method if requested
+        if include_eas:
+            try:
+                from eas_factorize import EllipticAdaptiveSearch, EASConfig
+                
+                name = 'EAS'
+                trial_data = defaultdict(list)
+                
+                for trial in range(num_trials):
+                    cfg = QMCConfig(
+                        dim=2,
+                        n=num_samples,
+                        engine="eas",
+                        eas_max_samples=num_samples * 2,
+                        eas_adaptive_window=True,
+                        seed=12345 + trial
+                    )
+                    
+                    eng = make_engine(cfg)
+                    X = eng.random(num_samples)
+                    
+                    sqrt_n_val = np.sqrt(n)
+                    window_radius = max(10, int(sqrt_n_val / 10))
+                    candidates = map_points_to_candidates(X, n, window_radius)
+                    unique_candidates = np.unique(candidates)
+                    
+                    # Check for hits
+                    hits = [c for c in unique_candidates if n % c == 0 and c > 1 and c < n]
+                    
+                    trial_data['unique_count'].append(len(unique_candidates))
+                    trial_data['effective_rate'].append(len(unique_candidates) / num_samples)
+                    trial_data['hit_probability'].append(1 if len(hits) > 0 else 0)
+                    trial_data['num_hits'].append(len(hits))
+                    
+                    # Enhanced metrics
+                    l2_disc = estimate_l2_discrepancy(X)
+                    strat_bal = stratification_balance(X)
+                    trial_data['l2_discrepancy'].append(l2_disc)
+                    trial_data['stratification_balance'].append(strat_bal)
+                
+                # Calculate statistics with bootstrap CI
+                stats = {}
+                for metric, values in trial_data.items():
+                    ci = QMCFactorization.bootstrap_confidence_interval(np.array(values), rng=rng)
+                    stats[f'{metric}_mean'] = ci['mean']
+                    stats[f'{metric}_ci_lower'] = ci['ci_lower']
+                    stats[f'{metric}_ci_upper'] = ci['ci_upper']
+                    stats[f'{metric}_std'] = ci['std']
+                
+                stats['method'] = name
+                stats['n'] = n
+                stats['num_samples'] = num_samples
+                stats['num_trials'] = num_trials
+                
+                results.append(stats)
+            except ImportError:
+                warnings.warn("EAS module not available, skipping EAS analysis", ImportWarning)
         
         return pd.DataFrame(results)
     
