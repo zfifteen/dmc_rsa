@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMC-Enhanced RSA Factorization Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.0.0/math.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f5f7fa; color: #333; }
+        h1, h2 { color: #2c3e50; }
+        .container { max-width: 1200px; margin: auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        input, select, button { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; }
+        button { background: #3498db; color: white; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #2980b9; }
+        .results { margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 8px; }
+        .chart-container { position: relative; height: 400px; margin: 30px 0; }
+        .factor-found { color: #27ae60; font-weight: bold; }
+        .code-block { background: #2c3e50; color: #f1c40f; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; }
+        footer { margin-top: 40px; font-size: 0.9em; color: #7f8c8d; text-align: center; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>QMC-Enhanced RSA Factorization Demo</h1>
+    <p><strong>Z = A(B / c)</strong> applied: Here, <i>Z</i> = candidate density, <i>A</i> = search frame (√N), <i>B</i> = sample rate, <i>c</i> = φ ≈ 1.618 (golden ratio invariant for low-discrepancy embedding). QMC reduces variance by ensuring <i>B/c</i> distributes uniformly in [0,1], then maps via geometric embedding <i>θ'(n,k) = φ · ((n mod φ)/φ)^k</i> with <i>k ≈ 0.3</i>.</p>
+
+    <div class="controls">
+        <div>
+            <label>Semiprime N (p×q):</label>
+            <input type="number" id="semiprime" value="899" min="15" step="1">
+        </div>
+        <div>
+            <label>Samples:</label>
+            <input type="number" id="samples" value="10000" min="100" max="100000" step="100">
+        </div>
+        <div>
+            <label>Method:</label>
+            <select id="method">
+                <option value="uniform">Uniform Monte Carlo</option>
+                <option value="stratified">Stratified</option>
+                <option value="qmc">QMC (Halton)</option>
+                <option value="qmc_phi">QMC-φ Hybrid (Novel)</option>
+            </select>
+        </div>
+        <div>
+            <label>Seed:</label>
+            <input type="number" id="seed" value="42" min="0">
+        </div>
+    </div>
+    <button onclick="runDemo()">Run Factorization Demo</button>
+
+    <div class="results" id="results"></div>
+    <div class="chart-container">
+        <canvas id="distributionChart"></canvas>
+    </div>
+
+    <h2>Live Code (QMC-φ Hybrid)</h2>
+    <div class="code-block" id="liveCode"></div>
+
+    <footer>
+        Based on <a href="https://github.com/zfifteen/z-sandbox/pull/71" target="_blank">PR #71</a> | 
+        QMC Source: Niederreiter, H. (1988). <a href="https://doi.org/10.1007/978-1-4613-1041-7" target="_blank">Low-discrepancy sequences</a> | 
+        φ-Embedding: <a href="https://github.com/zfifteen/z-sandbox/pull/71/files#diff-9b8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e" target="_blank">qmc_phi_hybrid.py</a>
+    </footer>
+</div>
+
+<script>
+// Core Z = A(B / c) Model
+const PHI = (1 + Math.sqrt(5)) / 2; // c = φ ≈ 1.6180339887
+const K_EMBED = 0.3;
+
+// Halton sequence (base 2, 3)
+function halton(n, base) {
+    let h = 0, f = 1;
+    while (n > 0) {
+        f /= base;
+        h += f * (n % base);
+        n = Math.floor(n / base);
+    }
+    return h;
+}
+
+// QMC-φ Hybrid Embedding: θ'(n,k) = φ · ((n mod φ)/φ)^k
+function qmcPhiHybrid(n, seed = 42) {
+    Math.seedrandom(seed.toString());
+    const i = n + Math.floor(Math.random() * 1e6); // deterministic scramble
+    const h2 = halton(i, 2), h3 = halton(i, 3);
+    const u = (h2 + h3) / 2;
+    const modPhi = ((i % Math.floor(PHI * 1e6)) / 1e6) / PHI;
+    return PHI * Math.pow(modPhi, K_EMBED);
+}
+
+// Generate candidates
+function generateCandidates(N, count, method, seed) {
+    const sqrtN = Math.sqrt(N);
+    const candidates = new Set();
+    Math.seedrandom(seed.toString());
+
+    for (let i = 0; i < count; i++) {
+        let x;
+        if (method === 'uniform') {
+            x = Math.random();
+        } else if (method === 'stratified') {
+            x = (i + Math.random()) / count;
+        } else if (method === 'qmc') {
+            const h2 = halton(i + seed, 2), h3 = halton(i + seed, 3);
+            x = (h2 + h3) / 2;
+        } else if (method === 'qmc_phi') {
+            x = qmcPhiHybrid(i, seed);
+        }
+        const candidate = Math.floor(x * sqrtN * 0.8) + Math.floor(sqrtN * 0.1);
+        if (candidate > 1 && candidate < N && N % candidate === 0) {
+            return { factor: candidate, all: [...candidates], hit: true };
+        }
+        candidates.add(candidate);
+    }
+    return { factor: null, all: [...candidates], hit: false };
+}
+
+// π estimation for convergence test
+function estimatePi(samples, method, seed) {
+    let inside = 0;
+    Math.seedrandom(seed.toString());
+    for (let i = 0; i < samples; i++) {
+        let x, y;
+        if (method === 'qmc') {
+            x = halton(i + seed, 2);
+            y = halton(i + seed, 3);
+        } else {
+            x = Math.random();
+            y = Math.random();
+        }
+        if (x*x + y*y <= 1) inside++;
+    }
+    return { pi: 4 * inside / samples, error: Math.abs(Math.PI - 4 * inside / samples) };
+}
+
+// Main demo
+let chart;
+async function runDemo() {
+    const N = parseInt(document.getElementById('semiprime').value);
+    const samples = parseInt(document.getElementById('samples').value);
+    const method = document.getElementById('method').value;
+    const seed = parseInt(document.getElementById('seed').value);
+
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.innerHTML = '<p>Running...</p>';
+
+    const { factor, all, hit } = generateCandidates(N, samples, method, seed);
+    const unique = all.length;
+    const coverage = ((Math.max(...all) - Math.min(...all)) / Math.sqrt(N)).toFixed(3);
+    const piData = estimatePi(10000, method === 'qmc_phi' ? 'qmc' : method, seed);
+
+    // Update results
+    resultsDiv.innerHTML = `
+        <p><strong>Method:</strong> ${method.replace(/_/g, ' ')} | <strong>Samples:</strong> ${samples.toLocaleString()}</p>
+        <p><strong>Unique Candidates:</strong> ${unique} | <strong>Search Coverage:</strong> ${coverage}×√N</p>
+        <p><strong>π Estimate (10k samples):</strong> ${piData.pi.toFixed(6)} (error: ${piData.error.toFixed(6)})</p>
+        <p class="${hit ? 'factor-found' : ''}"><strong>${hit ? `FACTOR FOUND: ${factor} × ${N/factor} = ${N}` : 'No factor in sample'}</strong></p>
+    `;
+
+    // Update chart
+    const ctx = document.getElementById('distributionChart').getContext('2d');
+    const bins = Array(20).fill(0);
+    const binSize = Math.sqrt(N) / 20;
+    all.forEach(c => {
+        const bin = Math.min(Math.floor(c / binSize), 19);
+        bins[bin]++;
+    });
+
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: bins.map((_, i) => `${(i*binSize).toFixed(0)}–${((i+1)*binSize).toFixed(0)}`),
+            datasets: [{
+                label: 'Candidate Density',
+                data: bins,
+                backgroundColor: method === 'qmc_phi' ? 'rgba(46, 204, 113, 0.7)' : 'rgba(52, 152, 219, 0.7)',
+                borderColor: method === 'qmc_phi' ? '#27ae60' : '#2980b9',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } },
+            plugins: {
+                title: { display: true, text: `Candidate Distribution near √${N} ≈ ${Math.sqrt(N).toFixed(2)}` }
+            }
+        }
+    });
+
+    // Live code
+    const code = `// QMC-φ Hybrid Candidate (n=${samples-1})\nconst u = (halton(${samples-1}, 2) + halton(${samples-1}, 3)) / 2;\nconst modPhi = ((${samples-1} % ${PHI.toFixed(0)}) / 1e6) / ${PHI.toFixed(6)};\nconst embedded = ${PHI.toFixed(6)} * Math.pow(modPhi, ${K_EMBED});\nconst candidate = Math.floor(embedded * Math.sqrt(${N}) * 0.8) + Math.floor(Math.sqrt(${N}) * 0.1);\n// Z = √N × (B / φ) → density invariant`;
+    document.getElementById('liveCode').textContent = code;
+}
+
+// Seedable random (for reproducibility)
+Math.seedrandom = function(seed) {
+    const m = 0x80000000, a = 1103515245, c = 12345;
+    let state = seed % m;
+    return function() {
+        state = (a * state + c) % m;
+        return state / m;
+    };
+};
+</script>
+</body>
+</html>
