@@ -19,6 +19,13 @@ Key features:
 - φ-bias currently reduces performance (needs refinement)
 - Statistical significance confirmed with 1000 trials and 95% CIs
 
+**New: Enhanced QMC Capabilities (October 2025)**
+- Sobol with Owen scrambling as recommended default
+- Replicated QMC with Cranley-Patterson randomization
+- Confidence intervals from independent replicates
+- L2 discrepancy and stratification balance metrics
+- Smooth candidate mapping to preserve low-discrepancy properties
+
 For detailed results, see [docs/QMC_RSA_SUMMARY.md](docs/QMC_RSA_SUMMARY.md).
 
 ## Project Structure
@@ -44,12 +51,14 @@ For detailed results, see [docs/QMC_RSA_SUMMARY.md](docs/QMC_RSA_SUMMARY.md).
 - Python 3.7+
 - NumPy
 - Pandas
-- SciPy
+- SciPy (>=1.7 for QMC support)
 
 Install dependencies:
 ```bash
 pip install numpy pandas scipy
 ```
+
+**Note:** The enhanced QMC features require scipy.stats.qmc, available in SciPy 1.7+.
 
 ### Web Demos
 - Modern web browser with JavaScript enabled
@@ -71,15 +80,56 @@ python scripts/qmc_factorization_analysis.py
 
 This generates comprehensive benchmarks and statistical analysis for various semiprime sizes.
 
+### Running the Enhanced QMC Demo (New)
+```bash
+python examples/qmc_directions_demo.py
+```
+
+This demonstrates:
+- Replicated QMC with confidence intervals (Cranley-Patterson randomization)
+- Sobol vs Halton engine comparison
+- Effect of Owen scrambling
+- Statistical significance testing
+- Usage recommendations
+
+### Quick Example: Replicated QMC Analysis
+```python
+from qmc_factorization_analysis import QMCFactorization
+
+results = QMCFactorization.run_replicated_qmc_analysis(
+    n=899,                # Semiprime to factor
+    num_samples=256,      # Power of 2 for Sobol
+    num_replicates=16,    # For confidence intervals
+    engine_type="sobol",  # Recommended default
+    scramble=True,        # Owen scrambling
+    seed=42               # Reproducibility
+)
+
+print(f"Mean unique candidates: {results['unique_count']['mean']:.2f}")
+print(f"95% CI: [{results['unique_count']['ci_lower']:.2f}, "
+      f"{results['unique_count']['ci_upper']:.2f}]")
+print(f"L2 discrepancy: {results['l2_discrepancy']['mean']:.4f}")
+```
+
 ### React Demo
 The React component in `demos/qmc_φ_biased_rsa_candidate_sampler_web_demo_react.jsx` can be integrated into a React application. It provides an interactive interface with charts and controls.
 
 ## Files Description
 
+### Core Files
 - **qmc_rsa_demo_v2.html**: Standalone interactive web demo with fair comparisons
 - **qmc_factorization_analysis.py**: Python script for rigorous statistical analysis
+- **qmc_engines.py**: Enhanced QMC engine module with Sobol/Halton support
 - **qmc_statistical_results_899.csv**: Raw data from 1000 trials on N=899
 - **QMC_RSA_SUMMARY.md**: Comprehensive summary of implementation, fixes, and findings
+
+### Examples
+- **qmc_directions_demo.py**: Comprehensive demonstration of enhanced QMC capabilities
+
+### Tests
+- **test_large.py**: Original test for baseline methods
+- **test_qmc_engines.py**: Tests for enhanced QMC engine module
+- **test_replicated_qmc.py**: Tests for replicated QMC analysis with confidence intervals
 
 ## Results
 
@@ -93,9 +143,14 @@ See the summary document for full results across multiple semiprime sizes.
 ## Contributing
 
 This is a research implementation. For extensions:
-- Add Sobol sequences for better high-dimensional performance
+- ✅ **DONE:** Sobol sequences with Owen scrambling (now default)
 - Refine φ-bias parameters for balanced semiprimes
 - Test on larger cryptographic-scale numbers
+- **Suggested next steps:**
+  - ECM σ parameter sampling via QMC
+  - GNFS polynomial selection sweeps
+  - Multi-armed bandits for method selection
+  - Extend to higher dimensions (residue classes, window widths, etc.)
 
 ## License
 
