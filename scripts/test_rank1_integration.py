@@ -259,7 +259,7 @@ def test_all_generator_types():
             engine="rank1_lattice",
             lattice_generator=gen_type,
             subgroup_order=20 if gen_type in ["cyclic", "spiral_conical"] else None,
-            spiral_depth=3 if gen_type == "spiral_conical" else 3,
+            spiral_depth=3,
             cone_height=1.2 if gen_type == "spiral_conical" else 1.0,
             scramble=True,
             seed=42

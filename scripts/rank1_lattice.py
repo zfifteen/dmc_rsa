@@ -384,8 +384,8 @@ class SpiralConicalLatticeEngine:
         """
         self.cfg = cfg
         self.golden = (1 + np.sqrt(5)) / 2  # Golden ratio φ ≈ 1.618
-        self.spiral_depth = getattr(cfg, 'spiral_depth', 3)
-        self.cone_height = getattr(cfg, 'cone_height', 1.0)
+        self.spiral_depth = cfg.spiral_depth
+        self.cone_height = cfg.cone_height
         
         # Use subgroup order m, default to sqrt(n) for optimal packing
         if cfg.subgroup_order:
@@ -504,10 +504,9 @@ class SpiralConicalLatticeEngine:
             points = np.zeros((n, d))
             points[:, :2] = points_2d
             
-            # Add extra dimensions using Fibonacci sequence
+            # Add extra dimensions using Fibonacci sequence (vectorized)
             for dim in range(2, d):
-                for k in range(n):
-                    points[k, dim] = ((k * pow(self.golden, dim - 1)) % 1.0)
+                points[:, dim] = (np.arange(n) * pow(self.golden, dim - 1)) % 1.0
         else:
             points = points_2d
         

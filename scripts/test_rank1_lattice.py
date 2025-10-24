@@ -402,9 +402,9 @@ def test_spiral_conical_packing():
     angles_sorted = np.sort(angles)
     diffs = np.diff(angles_sorted)
     
-    # The mean difference should be close to 2π * 0.618 (golden angle)
+    # The mean difference should be close to 2π * (φ - 1) (golden angle)
     # However, due to projection and modulo operations, we use a relaxed tolerance
-    golden_angle = 2 * np.pi * 0.618
+    golden_angle = 2 * np.pi * ((np.sqrt(5) - 1) / 2)
     mean_diff = np.mean(np.abs(diffs))
     
     print(f"  Mean angle difference: {mean_diff:.4f}")
