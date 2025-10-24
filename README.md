@@ -25,6 +25,11 @@ Key features:
 - Confidence intervals from independent replicates
 - L2 discrepancy and stratification balance metrics
 - Smooth candidate mapping to preserve low-discrepancy properties
+- **NEW: Rank-1 lattice constructions with group-theoretic foundations**
+  - Cyclic subgroup-based generating vectors
+  - Fibonacci and Korobov construction methods
+  - Lattice quality metrics (minimum distance, covering radius)
+  - φ(N)-aware mappings for RSA semiprime structure
 
 For detailed results, see [docs/QMC_RSA_SUMMARY.md](docs/QMC_RSA_SUMMARY.md).
 
@@ -124,9 +129,11 @@ The React component in `demos/qmc_φ_biased_rsa_candidate_sampler_web_demo_react
 ### Core Files
 - **qmc_rsa_demo_v2.html**: Standalone interactive web demo with fair comparisons
 - **qmc_factorization_analysis.py**: Python script for rigorous statistical analysis
-- **qmc_engines.py**: Enhanced QMC engine module with Sobol/Halton support
+- **qmc_engines.py**: Enhanced QMC engine module with Sobol/Halton/Rank-1 lattice support
+- **rank1_lattice.py**: Group-theoretic rank-1 lattice construction module
 - **qmc_statistical_results_899.csv**: Raw data from 1000 trials on N=899
 - **QMC_RSA_SUMMARY.md**: Comprehensive summary of implementation, fixes, and findings
+- **RANK1_LATTICE_INTEGRATION.md**: Documentation for rank-1 lattice integration
 
 ### Examples
 - **qmc_directions_demo.py**: Comprehensive demonstration of enhanced QMC capabilities
@@ -135,6 +142,9 @@ The React component in `demos/qmc_φ_biased_rsa_candidate_sampler_web_demo_react
 - **test_large.py**: Original test for baseline methods
 - **test_qmc_engines.py**: Tests for enhanced QMC engine module
 - **test_replicated_qmc.py**: Tests for replicated QMC analysis with confidence intervals
+- **test_rank1_lattice.py**: Unit tests for rank-1 lattice construction
+- **test_rank1_integration.py**: Integration tests for rank-1 lattice with QMC framework
+- **quick_validation.py**: Fast end-to-end validation test
 
 ## Results
 
@@ -149,13 +159,15 @@ See the summary document for full results across multiple semiprime sizes.
 
 This is a research implementation. For extensions:
 - ✅ **DONE:** Sobol sequences with Owen scrambling (now default)
+- ✅ **DONE:** Rank-1 lattice constructions with group-theoretic foundations
 - Refine φ-bias parameters for balanced semiprimes
 - Test on larger cryptographic-scale numbers
 - **Suggested next steps:**
-  - ECM σ parameter sampling via QMC
+  - ECM σ parameter sampling via QMC and rank-1 lattices
   - GNFS polynomial selection sweeps
   - Multi-armed bandits for method selection
   - Extend to higher dimensions (residue classes, window widths, etc.)
+  - Hybrid lattice-Sobol constructions
 
 ## License
 
