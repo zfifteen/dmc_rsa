@@ -364,7 +364,7 @@ def main():
         print(f"\n{row['method']} vs MC: {improvement:.2f}× improvement")
     
     # Save detailed results
-    df_899.to_csv('/mnt/user-data/outputs/qmc_statistical_results_899.csv', index=False)
+    df_899.to_csv('outputs/qmc_statistical_results_899.csv', index=False)
     
     print("\n2. COMPREHENSIVE BENCHMARK")
     print("-"*40)
@@ -382,7 +382,7 @@ def main():
     print(summary.to_string())
     
     # Save benchmark results
-    df_benchmark.to_csv('/mnt/user-data/outputs/qmc_benchmark_full.csv', index=False)
+    df_benchmark.to_csv('outputs/qmc_benchmark_full.csv', index=False)
     
     print("\n3. CONVERGENCE VALIDATION")
     print("-"*40)
@@ -412,7 +412,7 @@ def main():
     print("\n" + "="*80)
     print("CONCLUSION: QMC consistently outperforms MC for RSA candidate sampling")
     print(f"Canonical result (N=899): QMC+φ achieves {df_899[df_899['method'] == 'QMC+φ']['unique_count_mean'].values[0] / mc_base:.1f}× improvement")
-    print("Results saved to /mnt/user-data/outputs/")
+    print("Results saved to outputs/")
     print("="*80)
 
 if __name__ == "__main__":
