@@ -82,18 +82,10 @@ class QMCFactorization:
     @staticmethod
     def phi_bias_transform(u: np.ndarray, sqrt_n: float) -> np.ndarray:
         """
-        Apply φ-biased transformation (FIXED)
-        scale = φ * √N (not φ * N^(1/4) as in the bug)
+        Apply φ-biased transformation (USER FIX: log-space perturbation)
+        x' = sqrt(N) * exp(phi * (2*u - 1))
         """
-        scale = QMCFactorization.PHI * sqrt_n  # FIXED: was phi * np.sqrt(sqrt_n)
-        
-        # Inverse exponential CDF transformation
-        result = np.zeros_like(u)
-        mask_lower = u < 0.5
-        result[mask_lower] = sqrt_n - scale * np.log(2 * u[mask_lower])
-        result[~mask_lower] = sqrt_n + scale * np.log(2 * (1 - u[~mask_lower]))
-        
-        return result
+        return sqrt_n * np.exp(QMCFactorization.PHI * (2 * u - 1))
     
     @staticmethod
     def estimate_star_discrepancy(points: np.ndarray, grid_resolution: int = 20) -> float:
