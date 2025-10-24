@@ -11,6 +11,12 @@ FIXES IMPLEMENTED:
 4. Cranley-Patterson shifts for QMC variance estimation
 5. Bootstrap confidence intervals with proper statistical rigor
 6. Fixed seed RNG (PCG64) for perfect reproducibility
+
+ENHANCEMENTS (October 2025):
+7. Sobol with Owen scrambling as default QMC engine
+8. Replicated randomized QMC for variance estimation
+9. L2 discrepancy proxy and stratification balance metrics
+10. Smooth candidate mapping to preserve low-discrepancy properties
 """
 
 import numpy as np
@@ -22,6 +28,12 @@ import time
 import hashlib
 from dataclasses import dataclass
 from collections import defaultdict
+
+# Import enhanced QMC engines
+from qmc_engines import (
+    QMCConfig, make_engine, qmc_points, map_points_to_candidates,
+    estimate_l2_discrepancy, stratification_balance
+)
 
 # Set reproducible random seed
 np.random.seed(12345)
@@ -242,10 +254,199 @@ class QMCFactorization:
         }
     
     @staticmethod
+    def generate_candidates_enhanced(n: int, num_samples: int, 
+                                    engine_type: str = "sobol",
+                                    scramble: bool = True,
+                                    window_radius: Optional[int] = None,
+                                    seed: Optional[int] = None) -> CandidateResult:
+        """
+        Generate candidates using enhanced QMC engines with smooth mapping.
+        
+        Args:
+            n: Semiprime to factor
+            num_samples: Number of samples to generate
+            engine_type: 'sobol' or 'halton'
+            scramble: Use Owen scrambling (Sobol) or Faure permutations (Halton)
+            window_radius: Search window radius around sqrt(n), defaults to sqrt(n)/10
+            seed: Random seed for reproducibility
+            
+        Returns:
+            CandidateResult with metrics
+        """
+        sqrt_n = np.sqrt(n)
+        if window_radius is None:
+            window_radius = max(10, int(sqrt_n / 10))
+        
+        start_time = time.perf_counter()
+        
+        # Create QMC configuration
+        cfg = QMCConfig(
+            dim=2,
+            n=num_samples,
+            engine=engine_type,
+            scramble=scramble,
+            seed=seed,
+            replicates=1  # Single replicate for this method
+        )
+        
+        # Generate QMC points
+        eng = make_engine(cfg)
+        X = eng.random(num_samples)
+        
+        # Map to candidates using smooth mapping
+        candidates = map_points_to_candidates(X, n, window_radius)
+        
+        # Get unique candidates
+        unique_candidates = np.unique(candidates)
+        
+        # Check for hits (factors)
+        hits = []
+        for c in unique_candidates:
+            if n % c == 0 and c > 1 and c < n:
+                hits.append(c)
+        
+        # Calculate metrics
+        end_time = time.perf_counter()
+        time_elapsed = end_time - start_time
+        
+        # Calculate discrepancy metrics
+        l2_disc = estimate_l2_discrepancy(X)
+        strat_bal = stratification_balance(X)
+        
+        # Legacy star discrepancy (for compatibility)
+        if len(unique_candidates) > 0:
+            points_normalized = unique_candidates / (2 * sqrt_n)
+            points_2d = np.column_stack([
+                points_normalized,
+                (unique_candidates % 100) / 100
+            ])
+            star_discrepancy = QMCFactorization.estimate_star_discrepancy(points_2d)
+        else:
+            star_discrepancy = 1.0
+        
+        result = CandidateResult(
+            candidates=unique_candidates,
+            unique_count=len(unique_candidates),
+            total_samples=num_samples,
+            effective_rate=len(unique_candidates) / num_samples,
+            time_elapsed=time_elapsed,
+            candidates_per_sec=len(unique_candidates) / time_elapsed if time_elapsed > 0 else 0,
+            hits=hits,
+            hit_probability=len(hits) / len(unique_candidates) if len(unique_candidates) > 0 else 0,
+            star_discrepancy=star_discrepancy
+        )
+        
+        # Add enhanced metrics as attributes
+        result.l2_discrepancy = l2_disc
+        result.stratification_balance = strat_bal
+        
+        return result
+    
+    @staticmethod
+    def run_replicated_qmc_analysis(n: int, num_samples: int = 200,
+                                   num_replicates: int = 8,
+                                   engine_type: str = "sobol",
+                                   scramble: bool = True,
+                                   seed: Optional[int] = None) -> Dict:
+        """
+        Run replicated QMC analysis with confidence intervals from replicates.
+        
+        This implements Cranley-Patterson randomization by running multiple
+        independent QMC replicates and computing statistics across them.
+        
+        Args:
+            n: Semiprime to factor
+            num_samples: Number of samples per replicate
+            num_replicates: Number of independent QMC replicates
+            engine_type: 'sobol' or 'halton'
+            scramble: Use Owen scrambling or Faure permutations
+            seed: Random seed for reproducibility
+            
+        Returns:
+            Dict with replicate statistics and confidence intervals
+        """
+        sqrt_n = np.sqrt(n)
+        window_radius = max(10, int(sqrt_n / 10))
+        
+        # Create QMC configuration for replicates
+        cfg = QMCConfig(
+            dim=2,
+            n=num_samples,
+            engine=engine_type,
+            scramble=scramble,
+            seed=seed,
+            replicates=num_replicates
+        )
+        
+        replicate_results = []
+        
+        for replicate_idx, X in enumerate(qmc_points(cfg)):
+            # Map to candidates
+            candidates = map_points_to_candidates(X, n, window_radius)
+            unique_candidates = np.unique(candidates)
+            
+            # Check for hits
+            hits = [c for c in unique_candidates if n % c == 0 and c > 1 and c < n]
+            
+            # Calculate metrics
+            l2_disc = estimate_l2_discrepancy(X)
+            strat_bal = stratification_balance(X)
+            
+            replicate_results.append({
+                'unique_count': len(unique_candidates),
+                'effective_rate': len(unique_candidates) / num_samples,
+                'num_hits': len(hits),
+                'l2_discrepancy': l2_disc,
+                'stratification_balance': strat_bal
+            })
+        
+        # Aggregate statistics across replicates
+        unique_counts = [r['unique_count'] for r in replicate_results]
+        effective_rates = [r['effective_rate'] for r in replicate_results]
+        num_hits_list = [r['num_hits'] for r in replicate_results]
+        l2_discs = [r['l2_discrepancy'] for r in replicate_results]
+        strat_bals = [r['stratification_balance'] for r in replicate_results]
+        
+        # Calculate mean and 95% CI using normal approximation
+        def calc_stats(values):
+            mean = np.mean(values)
+            std = np.std(values, ddof=1)
+            se = std / np.sqrt(len(values))
+            ci_lower = mean - 1.96 * se
+            ci_upper = mean + 1.96 * se
+            return {
+                'mean': mean,
+                'std': std,
+                'ci_lower': ci_lower,
+                'ci_upper': ci_upper
+            }
+        
+        return {
+            'n': n,
+            'num_samples': num_samples,
+            'num_replicates': num_replicates,
+            'engine': engine_type,
+            'scramble': scramble,
+            'unique_count': calc_stats(unique_counts),
+            'effective_rate': calc_stats(effective_rates),
+            'num_hits': calc_stats(num_hits_list),
+            'l2_discrepancy': calc_stats(l2_discs),
+            'stratification_balance': calc_stats(strat_bals),
+            'replicate_results': replicate_results
+        }
+    
+    @staticmethod
     def run_statistical_analysis(n: int, num_samples: int = 200, 
-                                num_trials: int = 100) -> pd.DataFrame:
+                                num_trials: int = 100,
+                                include_enhanced: bool = False) -> pd.DataFrame:
         """
         Run comprehensive statistical analysis comparing all methods
+        
+        Args:
+            n: Semiprime to factor
+            num_samples: Number of samples per trial
+            num_trials: Number of trials for bootstrap
+            include_enhanced: If True, also include enhanced Sobol/Halton methods
         """
         methods = [
             ('MC', 'mc', False),
@@ -287,6 +488,51 @@ class QMCFactorization:
             stats['num_trials'] = num_trials
             
             results.append(stats)
+        
+        # Add enhanced methods if requested
+        if include_enhanced:
+            enhanced_methods = [
+                ('Sobol-Owen', 'sobol', True),
+                ('Halton-Scrambled', 'halton', True)
+            ]
+            
+            for name, engine_type, scramble in enhanced_methods:
+                trial_data = defaultdict(list)
+                
+                for trial in range(num_trials):
+                    result = QMCFactorization.generate_candidates_enhanced(
+                        n, num_samples, engine_type=engine_type, 
+                        scramble=scramble, seed=12345 + trial
+                    )
+                    
+                    trial_data['unique_count'].append(result.unique_count)
+                    trial_data['effective_rate'].append(result.effective_rate)
+                    trial_data['hit_probability'].append(1 if len(result.hits) > 0 else 0)
+                    trial_data['candidates_per_sec'].append(result.candidates_per_sec)
+                    trial_data['star_discrepancy'].append(result.star_discrepancy)
+                    trial_data['num_hits'].append(len(result.hits))
+                    
+                    # Enhanced metrics
+                    if hasattr(result, 'l2_discrepancy'):
+                        trial_data['l2_discrepancy'].append(result.l2_discrepancy)
+                    if hasattr(result, 'stratification_balance'):
+                        trial_data['stratification_balance'].append(result.stratification_balance)
+                
+                # Calculate statistics with bootstrap CI
+                stats = {}
+                for metric, values in trial_data.items():
+                    ci = QMCFactorization.bootstrap_confidence_interval(np.array(values), rng=rng)
+                    stats[f'{metric}_mean'] = ci['mean']
+                    stats[f'{metric}_ci_lower'] = ci['ci_lower']
+                    stats[f'{metric}_ci_upper'] = ci['ci_upper']
+                    stats[f'{metric}_std'] = ci['std']
+                
+                stats['method'] = name
+                stats['n'] = n
+                stats['num_samples'] = num_samples
+                stats['num_trials'] = num_trials
+                
+                results.append(stats)
         
         return pd.DataFrame(results)
     
