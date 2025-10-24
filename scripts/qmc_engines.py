@@ -107,6 +107,7 @@ class QMCConfig:
     # EAS specific parameters
     eas_max_samples: int = 2000  # Maximum candidates for EAS
     eas_adaptive_window: bool = True  # Enable adaptive window sizing for EAS
+    eas_reference_point: float = 1000.0  # Reference point for elliptic lattice generation
 
 def make_engine(cfg: QMCConfig):
     """
@@ -259,13 +260,18 @@ class EASEngine:
             
         Returns:
             Array of shape (n, d) with normalized elliptic lattice points in [0,1)^d
+            
+        Note:
+            The reference_point parameter (from QMCConfig.eas_reference_point) controls
+            the central value around which the elliptic lattice is generated. Larger
+            values spread points further; smaller values cluster them. Default is 1000.0.
         """
         if n is None:
             n = self.cfg.n
             
-        # Generate elliptic lattice points around a reference value
-        # Use sqrt of a large semiprime as reference for realistic distribution
-        sqrt_n = 1000.0  # Arbitrary reference point
+        # Generate elliptic lattice points around a configurable reference value.
+        # The reference point affects the distribution and quality of generated points.
+        sqrt_n = self.cfg.eas_reference_point
         radius = sqrt_n * 0.1  # 10% window
         
         # Generate candidates using EAS

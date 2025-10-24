@@ -29,12 +29,12 @@ def test_eas_config():
     assert config.max_samples == 2000
     assert config.golden_angle > 0
     assert 0 < config.elliptic_eccentricity <= 1
-    assert config.adaptive_window == True
+    assert config.adaptive_window
     
     # Custom config
     custom = EASConfig(max_samples=1000, adaptive_window=False)
     assert custom.max_samples == 1000
-    assert custom.adaptive_window == False
+    assert not custom.adaptive_window
     
     print("  ✓ EAS configuration works correctly")
 
