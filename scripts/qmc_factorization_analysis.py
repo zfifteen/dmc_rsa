@@ -35,6 +35,17 @@ from qmc_engines import (
     estimate_l2_discrepancy, stratification_balance
 )
 
+# Import rank-1 lattice module
+try:
+    from rank1_lattice import compute_lattice_quality_metrics
+    RANK1_AVAILABLE = True
+except ImportError:
+    RANK1_AVAILABLE = False
+    warnings.warn(
+        "rank1_lattice module not available. Rank-1 lattice analysis will not be available.",
+        ImportWarning
+    )
+
 # Set reproducible random seed
 np.random.seed(12345)
 
@@ -430,7 +441,8 @@ class QMCFactorization:
     @staticmethod
     def run_statistical_analysis(n: int, num_samples: int = 200, 
                                 num_trials: int = 100,
-                                include_enhanced: bool = False) -> pd.DataFrame:
+                                include_enhanced: bool = False,
+                                include_rank1: bool = False) -> pd.DataFrame:
         """
         Run comprehensive statistical analysis comparing all methods
         
@@ -439,6 +451,7 @@ class QMCFactorization:
             num_samples: Number of samples per trial
             num_trials: Number of trials for bootstrap
             include_enhanced: If True, also include enhanced Sobol/Halton methods
+            include_rank1: If True, also include rank-1 lattice methods
         """
         methods = [
             ('MC', 'mc', False),
@@ -509,6 +522,75 @@ class QMCFactorization:
                         trial_data['l2_discrepancy'].append(result.l2_discrepancy)
                     if hasattr(result, 'stratification_balance'):
                         trial_data['stratification_balance'].append(result.stratification_balance)
+                
+                # Calculate statistics with bootstrap CI
+                stats = {}
+                for metric, values in trial_data.items():
+                    ci = QMCFactorization.bootstrap_confidence_interval(np.array(values), rng=rng)
+                    stats[f'{metric}_mean'] = ci['mean']
+                    stats[f'{metric}_ci_lower'] = ci['ci_lower']
+                    stats[f'{metric}_ci_upper'] = ci['ci_upper']
+                    stats[f'{metric}_std'] = ci['std']
+                
+                stats['method'] = name
+                stats['n'] = n
+                stats['num_samples'] = num_samples
+                stats['num_trials'] = num_trials
+                
+                results.append(stats)
+        
+        # Add rank-1 lattice methods if requested
+        if include_rank1 and RANK1_AVAILABLE:
+            rank1_methods = [
+                ('Rank1-Fibonacci', 'fibonacci'),
+                ('Rank1-Cyclic', 'cyclic')
+            ]
+            
+            # Calculate φ(n) for subgroup order
+            from rank1_lattice import _euler_phi
+            phi_n = _euler_phi(n)
+            subgroup_order = max(2, phi_n // 20)  # Use φ(n)/20 as subgroup order
+            
+            for name, gen_type in rank1_methods:
+                trial_data = defaultdict(list)
+                
+                for trial in range(num_trials):
+                    cfg = QMCConfig(
+                        dim=2,
+                        n=num_samples,
+                        engine="rank1_lattice",
+                        lattice_generator=gen_type,
+                        subgroup_order=subgroup_order if gen_type == "cyclic" else None,
+                        scramble=True,
+                        seed=12345 + trial
+                    )
+                    
+                    eng = make_engine(cfg)
+                    X = eng.random(num_samples)
+                    
+                    sqrt_n_val = np.sqrt(n)
+                    window_radius = max(10, int(sqrt_n_val / 10))
+                    candidates = map_points_to_candidates(X, n, window_radius)
+                    unique_candidates = np.unique(candidates)
+                    
+                    # Check for hits
+                    hits = [c for c in unique_candidates if n % c == 0 and c > 1 and c < n]
+                    
+                    trial_data['unique_count'].append(len(unique_candidates))
+                    trial_data['effective_rate'].append(len(unique_candidates) / num_samples)
+                    trial_data['hit_probability'].append(1 if len(hits) > 0 else 0)
+                    trial_data['num_hits'].append(len(hits))
+                    
+                    # Enhanced metrics
+                    l2_disc = estimate_l2_discrepancy(X)
+                    strat_bal = stratification_balance(X)
+                    trial_data['l2_discrepancy'].append(l2_disc)
+                    trial_data['stratification_balance'].append(strat_bal)
+                    
+                    # Lattice-specific metrics
+                    lattice_metrics = compute_lattice_quality_metrics(X)
+                    trial_data['min_distance'].append(lattice_metrics['min_distance'])
+                    trial_data['covering_radius'].append(lattice_metrics['covering_radius'])
                 
                 # Calculate statistics with bootstrap CI
                 stats = {}
