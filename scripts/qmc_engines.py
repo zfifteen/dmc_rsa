@@ -91,8 +91,11 @@ class QMCConfig:
     replicates: int = 8       # Cranley-Patterson: use random_base for shifts
     auto_round_sobol: bool = True  # Automatically round to power of 2 for Sobol
     # Rank-1 lattice specific parameters
-    lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic"
+    lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic" | "spiral_conical" | "elliptic"
     subgroup_order: int | None = None  # For cyclic generator (defaults to φ(n)/2)
+    # Spiral-conical specific parameters
+    spiral_depth: int = 3              # Depth of fractal recursion for spiral_conical
+    cone_height: float = 1.0           # Height scaling factor for spiral_conical
 
 def make_engine(cfg: QMCConfig):
     """
@@ -165,7 +168,9 @@ class Rank1LatticeEngine:
             subgroup_order=cfg.subgroup_order,
             generator_type=cfg.lattice_generator,
             seed=cfg.seed,
-            scramble=cfg.scramble
+            scramble=cfg.scramble,
+            spiral_depth=cfg.spiral_depth,
+            cone_height=cfg.cone_height
         )
         self._points_cache = None
         
