@@ -132,6 +132,10 @@ The React component in `demos/qmc_φ_biased_rsa_candidate_sampler_web_demo_react
 
 ### Quick Example: Elliptic Adaptive Search (EAS)
 ```python
+# Add scripts directory to Python path
+import sys
+sys.path.append('scripts')
+
 from eas_factorize import factorize_eas, EASConfig
 
 # Basic usage with default settings
@@ -147,7 +151,23 @@ config = EASConfig(
     base_radius_factor=0.15
 )
 result = factorize_eas(your_semiprime, config=config, verbose=True)
+
+# Using EAS with QMC framework
+from qmc_engines import QMCConfig, make_engine
+
+cfg = QMCConfig(
+    dim=2, 
+    n=128, 
+    engine="eas",
+    eas_reference_point=1000.0,  # Central value for elliptic lattice (default: 1000.0)
+    eas_max_samples=2000,         # Maximum candidates (default: 2000)
+    eas_adaptive_window=True,     # Enable adaptive sizing (default: True)
+    seed=42
+)
+engine = make_engine(cfg)
+points = engine.random(128)
 ```
+
 
 ## Files Description
 
