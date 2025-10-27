@@ -26,6 +26,17 @@ except ImportError:
         ImportWarning
     )
 
+# Import EAS module
+try:
+    from eas_factorize import EllipticAdaptiveSearch, EASConfig
+    EAS_AVAILABLE = True
+except ImportError:
+    EAS_AVAILABLE = False
+    warnings.warn(
+        "eas_factorize module not available. EAS engine will not be available.",
+        ImportWarning
+    )
+
 
 def _is_power_of_two(n: int) -> bool:
     """Check if n is a power of 2."""
@@ -85,6 +96,7 @@ class QMCConfig:
     """Configuration for QMC engine with replicated randomization"""
     dim: int
     n: int
+    engine: str = "sobol"     # "sobol" | "halton" | "rank1_lattice" | "eas"
     engine: str = "sobol"     # "sobol" | "halton" | "rank1_lattice" | "elliptic_cyclic"
     scramble: bool = True     # Owen for Sobol, Faure/QR for Halton (scipy implements)
     seed: int | None = None
@@ -93,6 +105,10 @@ class QMCConfig:
     # Rank-1 lattice specific parameters
     lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic" | "elliptic_cyclic"
     subgroup_order: int | None = None  # For cyclic generator (defaults to φ(n)/2)
+    # EAS specific parameters
+    eas_max_samples: int = 2000  # Maximum candidates for EAS
+    eas_adaptive_window: bool = True  # Enable adaptive window sizing for EAS
+    eas_reference_point: float = 1000.0  # Reference point for elliptic lattice generation
     # Elliptic geometry parameters (for elliptic_cyclic)
     elliptic_a: float | None = None    # Major axis semi-length (defaults to subgroup_order/(2π))
     elliptic_b: float | None = None    # Minor axis semi-length (defaults to 0.8*a, eccentricity ~0.6)
@@ -106,11 +122,13 @@ def make_engine(cfg: QMCConfig):
     
     For rank-1 lattices, returns a custom wrapper that generates lattice points.
     
+    For EAS (Elliptic Adaptive Search), returns a wrapper that generates elliptic lattice points.
+    
     Args:
         cfg: QMCConfig instance with engine parameters
         
     Returns:
-        scipy.stats.qmc sampler instance or Rank1LatticeEngine wrapper
+        scipy.stats.qmc sampler instance, Rank1LatticeEngine wrapper, or EASEngine wrapper
         
     Raises:
         ValueError: If engine type is unsupported or if Sobol n is not power of 2
@@ -145,6 +163,13 @@ def make_engine(cfg: QMCConfig):
                 "Module import failed."
             )
         return Rank1LatticeEngine(cfg)
+    elif cfg.engine == "eas":
+        if not EAS_AVAILABLE:
+            raise ValueError(
+                "EAS engine requires eas_factorize module. "
+                "Module import failed."
+            )
+        return EASEngine(cfg)
     elif cfg.engine == "elliptic_cyclic":
         if not RANK1_AVAILABLE:
             raise ValueError(
@@ -214,6 +239,97 @@ class Rank1LatticeEngine:
     def reset(self):
         """Reset the lattice engine (clear cache)"""
         self._points_cache = None
+
+
+class EASEngine:
+    """
+    Wrapper class for Elliptic Adaptive Search (EAS) engine to match scipy.stats.qmc interface.
+    
+    This allows EAS elliptic lattice sampling to be used seamlessly with existing QMC code
+    that expects scipy-style engines with a random() method.
+    
+    Note: EAS generates points in a deterministic elliptic lattice pattern,
+    not truly random points. The "random" method name is kept for API compatibility.
+    """
+    
+    def __init__(self, cfg: QMCConfig):
+        """Initialize EAS engine with configuration"""
+        if not EAS_AVAILABLE:
+            raise ImportError("eas_factorize module not available")
+        
+        self.cfg = cfg
+        self.eas_config = EASConfig(
+            max_samples=cfg.eas_max_samples,
+            adaptive_window=cfg.eas_adaptive_window
+        )
+        self.eas = EllipticAdaptiveSearch(self.eas_config)
+        
+        # Seed random state for reproducibility in elliptic generation
+        if cfg.seed is not None:
+            np.random.seed(cfg.seed)
+        
+    def random(self, n: Optional[int] = None) -> np.ndarray:
+        """
+        Generate EAS elliptic lattice points.
+        
+        This generates points using elliptic lattice + golden-angle spiral sampling.
+        The points are normalized to [0,1)^d for compatibility with QMC interface.
+        
+        Args:
+            n: Number of points to generate
+            
+        Returns:
+            Array of shape (n, d) with normalized elliptic lattice points in [0,1)^d
+            
+        Note:
+            The reference_point parameter (from QMCConfig.eas_reference_point) controls
+            the central value around which the elliptic lattice is generated. Larger
+            values spread points further; smaller values cluster them. Default is 1000.0.
+        """
+        if n is None:
+            n = self.cfg.n
+            
+        # Generate elliptic lattice points around a configurable reference value.
+        # The reference point affects the distribution and quality of generated points.
+        sqrt_n = self.cfg.eas_reference_point
+        radius = sqrt_n * 0.1  # 10% window
+        
+        # Generate candidates using EAS
+        candidates = self.eas._generate_elliptic_lattice_points(
+            n // 2,  # Account for ± offsets
+            sqrt_n,
+            radius
+        )
+        
+        # Normalize to [0, 1)^d
+        # For 2D: (r, theta) where r is radial distance, theta is angle
+        min_val = np.min(candidates)
+        max_val = np.max(candidates)
+        range_val = max_val - min_val if max_val > min_val else 1.0
+        
+        # Create 2D points: dimension 0 is radial, dimension 1 is angular
+        points = np.zeros((min(len(candidates), n), self.cfg.dim))
+        
+        for i in range(min(len(candidates), n)):
+            # Radial component (normalized distance from center)
+            points[i, 0] = (candidates[i] - min_val) / range_val
+            
+            # Angular component (based on golden angle)
+            if self.cfg.dim >= 2:
+                angle_idx = i % len(candidates)
+                points[i, 1] = (angle_idx * self.eas_config.golden_angle) % (2 * np.pi) / (2 * np.pi)
+            
+            # Additional dimensions if needed (use simple stratification)
+            for d in range(2, self.cfg.dim):
+                points[i, d] = (i / n + d * 0.1) % 1.0
+        
+        return points
+    
+    def reset(self):
+        """Reset the EAS engine"""
+        # Reseed if seed was provided
+        if self.cfg.seed is not None:
+            np.random.seed(self.cfg.seed)
 
 
 def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
