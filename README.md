@@ -32,7 +32,7 @@ Key features:
   - Lattice quality metrics (minimum distance, covering radius)
   - φ(N)-aware mappings for RSA semiprime structure
 - **Biased QMC for Fermat Factorization**
-  - 43% reduction in average trials with u⁴ bias transformation
+  - 43% reduction in average trials with u^4 bias transformation
   - Adaptive bias strategies for close vs. distant factors
   - Hybrid approach (sequential prefix + biased QMC)
   - Dual-mixture sampling for comprehensive coverage
@@ -250,7 +250,7 @@ For N=899 (p=29, q=31):
 
 ### Biased QMC for Fermat Factorization (NEW)
 Based on validation experiments with 60-bit semiprimes:
-- **43% reduction in average trials** with biased QMC (u⁴) vs uniform sampling
+- **43% reduction in average trials** with biased QMC (u^4) vs uniform sampling
 - Biased LDS with β=2.0: 3.2% improvement (60-bit, 100k window)
 - Hybrid approach (5% sequential + biased): massive improvements for close factors (Δ ≤ 2²⁰)
 - Far-biased and dual-mixture: optimal for distant factors (Δ > 2²¹)
