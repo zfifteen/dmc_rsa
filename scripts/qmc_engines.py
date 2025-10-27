@@ -97,17 +97,21 @@ class QMCConfig:
     dim: int
     n: int
     engine: str = "sobol"     # "sobol" | "halton" | "rank1_lattice" | "eas"
+    engine: str = "sobol"     # "sobol" | "halton" | "rank1_lattice" | "elliptic_cyclic"
     scramble: bool = True     # Owen for Sobol, Faure/QR for Halton (scipy implements)
     seed: int | None = None
     replicates: int = 8       # Cranley-Patterson: use random_base for shifts
     auto_round_sobol: bool = True  # Automatically round to power of 2 for Sobol
     # Rank-1 lattice specific parameters
-    lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic"
+    lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic" | "elliptic_cyclic"
     subgroup_order: int | None = None  # For cyclic generator (defaults to φ(n)/2)
     # EAS specific parameters
     eas_max_samples: int = 2000  # Maximum candidates for EAS
     eas_adaptive_window: bool = True  # Enable adaptive window sizing for EAS
     eas_reference_point: float = 1000.0  # Reference point for elliptic lattice generation
+    # Elliptic geometry parameters (for elliptic_cyclic)
+    elliptic_a: float | None = None    # Major axis semi-length (defaults to subgroup_order/(2π))
+    elliptic_b: float | None = None    # Minor axis semi-length (defaults to 0.8*a, eccentricity ~0.6)
 
 def make_engine(cfg: QMCConfig):
     """
@@ -166,6 +170,13 @@ def make_engine(cfg: QMCConfig):
                 "Module import failed."
             )
         return EASEngine(cfg)
+    elif cfg.engine == "elliptic_cyclic":
+        if not RANK1_AVAILABLE:
+            raise ValueError(
+                "Elliptic cyclic engine requires rank1_lattice module. "
+                "Module import failed."
+            )
+        return Rank1LatticeEngine(cfg)
     else:
         raise ValueError(f"Unsupported engine: {cfg.engine}")
 
@@ -183,13 +194,22 @@ class Rank1LatticeEngine:
             raise ImportError("rank1_lattice module not available")
         
         self.cfg = cfg
+        
+        # Determine generator type based on engine
+        if cfg.engine == "elliptic_cyclic":
+            generator_type = "elliptic_cyclic"
+        else:
+            generator_type = cfg.lattice_generator
+        
         self.lattice_cfg = Rank1LatticeConfig(
             n=cfg.n,
             d=cfg.dim,
             subgroup_order=cfg.subgroup_order,
-            generator_type=cfg.lattice_generator,
+            generator_type=generator_type,
             seed=cfg.seed,
-            scramble=cfg.scramble
+            scramble=cfg.scramble,
+            elliptic_a=cfg.elliptic_a,
+            elliptic_b=cfg.elliptic_b
         )
         self._points_cache = None
         
