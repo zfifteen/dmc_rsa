@@ -97,7 +97,7 @@ def _derive_subgroup_order(n: int, dim: int, cone_height: float, spiral_depth: i
         
     Example:
         >>> _derive_subgroup_order(n=144, dim=2, cone_height=1.2, spiral_depth=3)
-        16
+        32
     """
     import math
     import os
