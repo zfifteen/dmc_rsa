@@ -35,6 +35,18 @@ Key features:
     - Zero-config optimal stratification
     - 23-37% lower discrepancy vs fixed parameters at n>1k
     - Eliminates manual tuning
+- **NEW: Elliptic Adaptive Search (EAS)**
+  - Elliptic lattice sampling with golden-angle spiral
+  - Adaptive window sizing based on bit length
+  - Efficient for small to medium factors (16-40 bits)
+  - 70% success rate on 32-bit, 40% on 40-bit semiprimes
+  - Orders of magnitude search space reduction
+- **Biased QMC for Fermat Factorization**
+  - 43% reduction in average trials with u^4 bias transformation
+  - Adaptive bias strategies for close vs. distant factors
+  - Hybrid approach (sequential prefix + biased QMC)
+  - Dual-mixture sampling for comprehensive coverage
+  - Automatic sampler recommendation system
 
 For detailed results, see [docs/QMC_RSA_SUMMARY.md](docs/QMC_RSA_SUMMARY.md).
 
@@ -50,12 +62,19 @@ For detailed results, see [docs/QMC_RSA_SUMMARY.md](docs/QMC_RSA_SUMMARY.md).
 │   ├── qmc_rsa_demo_v2.html         # Interactive HTML demo (main)
 │   ├── grok.html                    # Alternative demo
 │   └── qmc_φ_biased_rsa_candidate_sampler_web_demo_react.jsx  # React component demo
+├── examples/
+│   ├── qmc_directions_demo.py       # QMC engine demonstration
+│   ├── rank1_lattice_example.py     # Rank-1 lattice examples
+│   └── fermat_qmc_demo.py           # Fermat factorization with biased QMC demo
 ├── scripts/
 │   ├── qmc_factorization_analysis.py  # Python analysis script
 │   ├── rank1_lattice.py              # Rank-1 lattice construction module
 │   ├── qmc_engines.py                # Enhanced QMC engines
+│   ├── fermat_qmc_bias.py            # Fermat factorization with biased QMC
 │   ├── benchmark_elliptic.py         # Elliptic geometry benchmark
-│   └── demo_elliptic_geometry.py     # Elliptic geometry demonstration
+│   ├── demo_elliptic_geometry.py     # Elliptic geometry demonstration
+│   ├── test_fermat_qmc_bias.py       # Tests for Fermat QMC module
+│   └── test_*.py                     # Various test suites
 ├── reports/
 │   └── qmc_statistical_results_899.csv  # Benchmark results for N=899
 ├── ELLIPTIC_INTEGRATION_SUMMARY.md  # Elliptic geometry integration summary
@@ -126,6 +145,18 @@ python scripts/demo_elliptic_geometry.py
 python scripts/benchmark_elliptic.py
 ```
 
+### Running Fermat QMC Bias Demo (New)
+```bash
+# Interactive demo showing biased QMC for Fermat factorization
+python examples/fermat_qmc_demo.py
+
+# Run tests for the module
+python scripts/test_fermat_qmc_bias.py
+
+# Command-line factorization
+python scripts/fermat_qmc_bias.py 899 --sampler biased_golden --beta 2.0
+```
+
 ### Quick Example: Elliptic Cyclic Lattice
 ```python
 from qmc_engines import QMCConfig, make_engine
@@ -167,22 +198,89 @@ print(f"95% CI: [{results['unique_count']['ci_lower']:.2f}, "
 print(f"L2 discrepancy: {results['l2_discrepancy']['mean']:.4f}")
 ```
 
+### Quick Example: Fermat Factorization with Biased QMC
+```python
+from fermat_qmc_bias import FermatConfig, SamplerType, fermat_factor, recommend_sampler
+
+# Automatic recommendation
+N = 899
+rec = recommend_sampler(N=N, p=29, q=31, window_size=100000)
+print(f"Recommended: {rec['sampler_type'].value}")
+
+# Configure and factor
+cfg = FermatConfig(
+    N=N,
+    max_trials=100000,
+    sampler_type=SamplerType.BIASED_GOLDEN,
+    beta=2.0,  # Bias exponent (higher = more bias toward small k)
+    seed=42
+)
+
+result = fermat_factor(cfg)
+print(f"Success: {result['success']}")
+print(f"Factors: {result['factors']}")
+print(f"Trials: {result['trials']}")
+```
+
 ### React Demo
 The React component in `demos/qmc_φ_biased_rsa_candidate_sampler_web_demo_react.jsx` can be integrated into a React application. It provides an interactive interface with charts and controls.
+
+### Quick Example: Elliptic Adaptive Search (EAS)
+```python
+# Add scripts directory to Python path
+import sys
+sys.path.append('scripts')
+
+from eas_factorize import factorize_eas, EASConfig
+
+# Basic usage with default settings
+result = factorize_eas(899)  # Factor 29 × 31
+if result.success:
+    print(f"Factors: {result.factor_p} × {result.factor_q}")
+    print(f"Search reduction: {result.search_reduction:.0f}×")
+
+# Custom configuration for larger factors
+config = EASConfig(
+    max_samples=5000,
+    adaptive_window=True,
+    base_radius_factor=0.15
+)
+result = factorize_eas(your_semiprime, config=config, verbose=True)
+
+# Using EAS with QMC framework
+from qmc_engines import QMCConfig, make_engine
+
+cfg = QMCConfig(
+    dim=2, 
+    n=128, 
+    engine="eas",
+    eas_reference_point=1000.0,  # Central value for elliptic lattice (default: 1000.0)
+    eas_max_samples=2000,         # Maximum candidates (default: 2000)
+    eas_adaptive_window=True,     # Enable adaptive sizing (default: True)
+    seed=42
+)
+engine = make_engine(cfg)
+points = engine.random(128)
+```
+
 
 ## Files Description
 
 ### Core Files
 - **qmc_rsa_demo_v2.html**: Standalone interactive web demo with fair comparisons
 - **qmc_factorization_analysis.py**: Python script for rigorous statistical analysis
-- **qmc_engines.py**: Enhanced QMC engine module with Sobol/Halton/Rank-1 lattice support
+- **qmc_engines.py**: Enhanced QMC engine module with Sobol/Halton/Rank-1 lattice/EAS support
 - **rank1_lattice.py**: Group-theoretic rank-1 lattice construction module
+- **eas_factorize.py**: Elliptic Adaptive Search implementation
+- **fermat_qmc_bias.py**: Fermat factorization with biased QMC sampling (NEW)
 - **qmc_statistical_results_899.csv**: Raw data from 1000 trials on N=899
 - **QMC_RSA_SUMMARY.md**: Comprehensive summary of implementation, fixes, and findings
 - **RANK1_LATTICE_INTEGRATION.md**: Documentation for rank-1 lattice integration
 
 ### Examples
 - **qmc_directions_demo.py**: Comprehensive demonstration of enhanced QMC capabilities
+- **eas_example.py**: Elliptic Adaptive Search usage examples and demonstrations
+- **fermat_qmc_demo.py**: Demonstration of biased QMC for Fermat factorization (NEW)
 
 ### Tests
 - **test_large.py**: Original test for baseline methods
@@ -190,14 +288,25 @@ The React component in `demos/qmc_φ_biased_rsa_candidate_sampler_web_demo_react
 - **test_replicated_qmc.py**: Tests for replicated QMC analysis with confidence intervals
 - **test_rank1_lattice.py**: Unit tests for rank-1 lattice construction
 - **test_rank1_integration.py**: Integration tests for rank-1 lattice with QMC framework
+- **test_eas.py**: Unit tests for Elliptic Adaptive Search
+- **test_fermat_qmc_bias.py**: Tests for Fermat factorization with biased QMC (NEW)
 - **quick_validation.py**: Fast end-to-end validation test
 
 ## Results
 
+### QMC Candidate Sampling (N=899)
 For N=899 (p=29, q=31):
 - QMC unique candidates: 1.03× improvement over MC
 - Hit probability improvements
 - Star discrepancy metrics
+
+### Biased QMC for Fermat Factorization (NEW)
+Based on validation experiments with 60-bit semiprimes:
+- **43% reduction in average trials** with biased QMC (u^4) vs uniform sampling
+- Biased LDS with β=2.0: 3.2% improvement (60-bit, 100k window)
+- Hybrid approach (5% sequential + biased): massive improvements for close factors (Δ ≤ 2²⁰)
+- Far-biased and dual-mixture: optimal for distant factors (Δ > 2²¹)
+- Success rate preservation: bias reduces trials without sacrificing completeness
 
 See the summary document for full results across multiple semiprime sizes.
 

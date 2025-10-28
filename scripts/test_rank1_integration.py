@@ -248,7 +248,7 @@ def test_all_generator_types():
     N = 899
     window_radius = 10
     
-    generator_types = ["fibonacci", "korobov", "cyclic"]
+    generator_types = ["fibonacci", "korobov", "cyclic", "spiral_conical"]
     
     for gen_type in generator_types:
         print(f"\n  Testing {gen_type}...")
@@ -258,7 +258,9 @@ def test_all_generator_types():
             n=128,
             engine="rank1_lattice",
             lattice_generator=gen_type,
-            subgroup_order=20 if gen_type == "cyclic" else None,
+            subgroup_order=20 if gen_type in ["cyclic", "spiral_conical"] else None,
+            spiral_depth=3,
+            cone_height=1.2 if gen_type == "spiral_conical" else 1.0,
             scramble=True,
             seed=42
         )
@@ -278,6 +280,78 @@ def test_all_generator_types():
     print("\n  ✓ All generator types work correctly")
 
 
+def test_spiral_conical_integration():
+    """Test spiral-conical lattice integration with QMC framework"""
+    print("\nTesting spiral-conical integration...")
+    
+    cfg = QMCConfig(
+        dim=2,
+        n=144,
+        engine="rank1_lattice",
+        lattice_generator="spiral_conical",
+        subgroup_order=12,
+        spiral_depth=3,
+        cone_height=1.2,
+        scramble=True,
+        seed=42
+    )
+    
+    engine = make_engine(cfg)
+    points = engine.random(144)
+    
+    # Check basic properties
+    assert points.shape == (144, 2)
+    assert np.all(points >= 0) and np.all(points < 1)
+    
+    # Compute quality metrics
+    metrics = compute_lattice_quality_metrics(points)
+    print(f"  Min distance: {metrics['min_distance']:.4f}")
+    print(f"  Covering radius: {metrics['covering_radius']:.4f}")
+    
+    # Test with RSA candidate mapping
+    N = 899
+    window_radius = 30
+    candidates = map_points_to_candidates(points, N, window_radius)
+    
+    assert len(candidates) > 0
+    print(f"  Generated {len(candidates)} RSA candidates")
+    print("  ✓ Spiral-conical integration works correctly")
+
+
+def test_spiral_conical_replication():
+    """Test replicated generation with spiral-conical"""
+    print("\nTesting spiral-conical replication...")
+    
+    cfg = QMCConfig(
+        dim=2,
+        n=100,
+        engine="rank1_lattice",
+        lattice_generator="spiral_conical",
+        subgroup_order=10,
+        spiral_depth=3,
+        cone_height=1.0,
+        scramble=True,
+        seed=42,
+        replicates=5
+    )
+    
+    replicates = list(qmc_points(cfg))
+    
+    # Check we got 5 replicates
+    assert len(replicates) == 5
+    
+    # Check each replicate has correct shape
+    for i, rep in enumerate(replicates):
+        assert rep.shape == (100, 2)
+        assert np.all(rep >= 0) and np.all(rep < 1)
+    
+    # Replicates should be different (due to scrambling)
+    assert not np.allclose(replicates[0], replicates[1])
+    
+    print(f"  Generated {len(replicates)} replicates")
+    print("  ✓ Replication works correctly")
+
+
 def main():
     """Run all integration tests"""
     print("="*70)
@@ -290,6 +364,8 @@ def main():
     test_rank1_with_rsa_candidate_mapping()
     test_rank1_replicated_analysis()
     test_all_generator_types()
+    test_spiral_conical_integration()
+    test_spiral_conical_replication()
     
     print("\n" + "="*70)
     print("All integration tests passed! ✓")
@@ -297,9 +373,10 @@ def main():
     print("\nKey Findings:")
     print("- Rank-1 lattices integrate seamlessly with existing QMC framework")
     print("- Cyclic subgroup construction provides competitive quality metrics")
+    print("- Spiral-conical lattice adds golden angle packing optimization")
     print("- RSA candidate mapping works correctly with lattice points")
     print("- Replicated analysis enables confidence interval estimation")
-    print("- All generator types (Fibonacci, Korobov, Cyclic) functional")
+    print("- All generator types (Fibonacci, Korobov, Cyclic, Spiral-Conical) functional")
     print("="*70)
 
 

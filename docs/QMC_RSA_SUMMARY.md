@@ -12,19 +12,22 @@
 ## Key Findings 📊
 
 ### Pure QMC vs MC (without φ-bias)
+
 - **N=899**: QMC achieves **1.03×** improvement in unique candidates
-- **N=3953**: QMC achieves **1.25×** improvement 
+- **N=3953**: QMC achieves **1.25×** improvement
 - **N=9991**: QMC achieves **1.34×** improvement
 - Larger improvements for bigger semiprimes, as expected from O((log N)^d/N) convergence
 
 ### φ-Bias Performance Issue
+
 - φ-bias **reduces** performance: QMC+φ achieves only 0.93× vs baseline MC
 - Over-concentration near √N appears to miss factors for balanced semiprimes
 - The exponential tail transformation may be too aggressive
 
 ### Star Discrepancy
+
 - QMC: 0.4198 (lower is better)
-- MC: 0.4204 
+- MC: 0.4204
 - Minimal difference at N=899 with 200 samples
 
 ## Deliverables 📦
@@ -51,18 +54,21 @@
 ## Recommendations for Publication 🎯
 
 ### Immediate Actions
+
 1. **Focus on pure QMC vs MC**: Clear 1.03-1.34× improvement, stronger for larger N
 2. **Investigate φ-bias parameters**: Current implementation over-concentrates; try smaller scale factors
 3. **Add Sobol sequences**: Better high-dimensional performance than Halton
 4. **Test on cryptographic-scale semiprimes**: N > 10^6 should show stronger QMC advantage
 
 ### Statistical Claims (Defensible)
+
 - "QMC provides 1.03× improvement for N=899 with 95% CI [1.031, 1.034]"
 - "Improvement scales with semiprime size: 1.34× at N=9991"
 - "Deterministic low-discrepancy sequences reduce candidate redundancy"
 - "First documented application of QMC to RSA candidate generation"
 
 ### What NOT to Claim
+
 - Don't claim 65× improvement (that was from the buggy implementation)
 - Don't claim φ-bias improves performance (it currently doesn't)
 - Don't claim this breaks RSA (it's a modest improvement to candidate sampling)
