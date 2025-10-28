@@ -109,6 +109,10 @@ class QMCConfig:
     spiral_depth: int = 3              # Depth of fractal recursion for spiral_conical
     cone_height: float = 1.0           # Height scaling factor for spiral_conical
     lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic" | "elliptic_cyclic"
+    subgroup_order: int | None = None  # For cyclic generator (auto-derived if None, deprecated for manual setting)
+    # Geometric parameters for spiral-conical lattice stratification
+    cone_height: float = 1.2           # Height scaling factor for conical geometry
+    spiral_depth: int = 3              # Radial structure depth for spiral stratification
     subgroup_order: int | None = None  # For cyclic generator (defaults to φ(n)/2)
     # EAS specific parameters
     eas_max_samples: int = 2000  # Maximum candidates for EAS
@@ -213,6 +217,8 @@ class Rank1LatticeEngine:
             generator_type=generator_type,
             seed=cfg.seed,
             scramble=cfg.scramble,
+            cone_height=cfg.cone_height,
+            spiral_depth=cfg.spiral_depth,
             spiral_depth=cfg.spiral_depth,
             cone_height=cfg.cone_height
             elliptic_a=cfg.elliptic_a,
@@ -369,7 +375,13 @@ def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
             engine=cfg.engine,
             scramble=cfg.scramble,
             seed=replicate_seed,
-            replicates=1  # Not used in recursion
+            replicates=1,  # Not used in recursion
+            lattice_generator=cfg.lattice_generator,
+            subgroup_order=cfg.subgroup_order,
+            cone_height=cfg.cone_height,
+            spiral_depth=cfg.spiral_depth,
+            elliptic_a=cfg.elliptic_a,
+            elliptic_b=cfg.elliptic_b
         ))
         
         # Generate points
