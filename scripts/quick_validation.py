@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick validation test for rank-1 lattice integration
+Quick validation test for rank-1 lattice and EAS integration
 Tests core functionality with reduced trial counts
 """
 
@@ -11,9 +11,9 @@ import numpy as np
 from qmc_factorization_analysis import QMCFactorization
 
 def quick_validation():
-    """Quick validation of rank-1 lattice vs standard QMC"""
+    """Quick validation of rank-1 lattice, EAS, and standard QMC"""
     print("="*70)
-    print("Quick Validation: Rank-1 Lattice Integration")
+    print("Quick Validation: Rank-1 Lattice & EAS Integration")
     print("="*70)
     
     n = 899  # 29 × 31
@@ -28,7 +28,8 @@ def quick_validation():
         num_samples=num_samples,
         num_trials=num_trials,
         include_enhanced=True,
-        include_rank1=True
+        include_rank1=True,
+        include_eas=True
     )
     
     # Calculate improvements
@@ -50,8 +51,9 @@ def quick_validation():
         if 'min_distance_mean' in row and not np.isnan(row['min_distance_mean']):
             print(f"{'':20s}  Min distance: {row['min_distance_mean']:.4f}")
     
-    # Verify rank-1 methods are present
+    # Verify rank-1 and EAS methods are present
     rank1_methods = df[df['method'].str.contains('Rank1', na=False)]
+    eas_methods = df[df['method'].str.contains('EAS', na=False)]
     
     print("\n" + "="*70)
     print("VALIDATION STATUS")
@@ -63,6 +65,7 @@ def quick_validation():
         ("Rank-1 methods have min_distance metric", 
          'min_distance_mean' in rank1_methods.columns and 
          not rank1_methods['min_distance_mean'].isna().all()),
+        ("EAS method present", len(eas_methods) > 0),
         ("All methods produce unique candidates > 0",
          (df['unique_count_mean'] > 0).all()),
     ]
@@ -77,9 +80,10 @@ def quick_validation():
         print("\n" + "="*70)
         print("✓ All validation checks passed!")
         print("="*70)
-        print("\nRank-1 lattice integration is working correctly.")
+        print("\nRank-1 lattice and EAS integration is working correctly.")
         print("The cyclic subgroup construction provides competitive performance")
         print("with theoretically-motivated regularity properties.")
+        print("EAS provides elliptic lattice sampling with golden-angle spiral.")
     else:
         print("\n✗ Some validation checks failed!")
         return False

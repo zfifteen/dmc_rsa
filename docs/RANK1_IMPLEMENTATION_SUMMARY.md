@@ -12,6 +12,7 @@ Successfully implemented and integrated group-theoretic rank-1 lattice construct
 ### Core Modules
 
 1. **`rank1_lattice.py`** (580+ lines)
+1. **`rank1_lattice.py`** (~470 lines, updated)
    - Euler totient function φ(N) calculation
    - GCD and coprimality checks
    - Four generating vector construction methods:
@@ -19,14 +20,24 @@ Successfully implemented and integrated group-theoretic rank-1 lattice construct
      - Korobov (primitive root-based)
      - Cyclic subgroup (group-theoretic, novel)
      - **Spiral-Conical (geometric embedding, NEW)**
+     - **Elliptic cyclic (geometric embedding, NEW)**
    - Lattice point generation with Cranley-Patterson scrambling
    - Quality metrics: minimum distance, covering radius
    - **SpiralConicalLatticeEngine class** with golden angle packing
 
-2. **Enhanced `qmc_engines.py`**
+**Elliptic Cyclic Addition:**
+- `_elliptic_cyclic_generating()` function implements elliptic geometry embedding
+- Maps cyclic subgroup indices to elliptic coordinates: t = 2πk/m
+- Configurable eccentricity via `elliptic_a` and `elliptic_b` parameters
+- Multi-cycle support with golden ratio phase offsets when n > subgroup_order
+- Preserves cyclic order while optimizing geodesic point placement
+
+2. **Enhanced `qmc_engines.py`** (updated)
    - Added `Rank1LatticeEngine` wrapper class
    - Extended `QMCConfig` with lattice-specific parameters
    - **Added spiral-conical parameters**: `spiral_depth`, `cone_height`
+   - **NEW**: Added `elliptic_a` and `elliptic_b` parameters
+   - **NEW**: Support for `engine="elliptic_cyclic"` option
    - Seamless integration with scipy-style interface
    - Support for `engine="rank1_lattice"` with multiple generator types
    - Support for `lattice_generator="spiral_conical"`
@@ -42,6 +53,12 @@ Successfully implemented and integrated group-theoretic rank-1 lattice construct
 1. **`test_rank1_lattice.py`** - 17 unit tests
    - Mathematical functions (φ, GCD, coprimality)
    - All four generating vector methods
+1. **`test_rank1_lattice.py`** - 18 unit tests (updated from 12)
+   - Mathematical functions (φ, GCD, coprimality)
+   - All four generating vector methods
+   - **NEW**: `test_elliptic_cyclic_geometry()` - validates ellipse embedding
+   - **NEW**: `test_elliptic_vs_cyclic_quality()` - compares elliptic vs standard cyclic
+   - **NEW**: `test_elliptic_cyclic_integration()` - tests engine integration
    - Lattice generation and scrambling
    - Quality metrics computation
    - RSA semiprime alignment
@@ -65,10 +82,12 @@ Successfully implemented and integrated group-theoretic rank-1 lattice construct
 
 ### Documentation
 
-1. **`RANK1_LATTICE_INTEGRATION.md`** - Comprehensive documentation
+1. **`RANK1_LATTICE_INTEGRATION.md`** - Comprehensive documentation (updated)
    - Theoretical foundation
+   - **NEW**: Elliptic geometry embedding section
+   - **NEW**: Elliptic ↔ Cyclic subgroup isomorphism explanation
    - Implementation details
-   - Usage examples
+   - Usage examples (including elliptic cyclic)
    - Test results
    - Future directions
 
