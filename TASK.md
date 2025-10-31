@@ -2,7 +2,7 @@
 
 **Hypothesis**: Biasing QMC candidate generation (Sobol+Owen) with Z-framework features (κ(n) from cognitive-number-theory, θ′(n,k) with k=0.3 from wave-crispr-signal) improves unique candidate yield and hit rate vs. plain QMC/MC baselines. Z acts as structural weight to prioritize low-curvature/geodesic-aligned samples; expect 5-15% lift on distant-factor semiprimes without claiming breaks.
 
-**Test Set**: RSA-100 (factored: 152260502792253336053561837813263742971806811496138068865790849458012296325895289765400379915814592864338385045774944603188475632820762772225844886169231964970750561096338880768919675360226712532406641991343156378639345719136375072227893423221458786725888933711372462466095558606105033429948960805929), RSA-129, RSA-155. Use distant-factor subsets (e.g., p/q ratio >1.5); source from factored challenges only.
+**Test Set**: RSA-100 (factored: 15226050279225333605356183781326374297180681149613\
 
 **Metrics**: 
 - Success rate (% hits in 10k trials)
