@@ -26,7 +26,8 @@ from scipy.stats import qmc
 from typing import List, Tuple, Dict, Optional
 import time
 import hashlib
-import argparseimport argparse
+import argparse
+import warnings
 from dataclasses import dataclass
 from collections import defaultdict
 
@@ -714,8 +715,13 @@ class QMCFactorization:
         
         return pd.concat(all_results, ignore_index=True)
 
+import os
+
 def main():
     """Main execution with publishable results"""
+    # Create output directory if it doesn't exist
+    os.makedirs("outputs", exist_ok=True)
+
     print("="*80)
     print("QMC Variance Reduction for RSA Factorization - Statistical Analysis")
     print("First Documented Application - October 2025")
@@ -814,6 +820,6 @@ if __name__ == "__main__":
     if args.analyze:
         print("Analysis mode not implemented yet")
     else:
-        print("Benchmark mode not implemented yet")
+        # This is the benchmark mode, which is not fully implemented
+        # but we can run the main analysis function for now.
         main()
-    main()

@@ -22,7 +22,8 @@ except ImportError:
     warnings.warn(
         "Z-framework modules not available. Z-bias will not be available.",
         ImportWarning
-    ) 
+    )
+
 # Import rank-1 lattice module
 try:
     from rank1_lattice import (
@@ -35,7 +36,7 @@ except ImportError:
     warnings.warn(
         "rank1_lattice module not available. Rank-1 lattice engine will not be available.",
         ImportWarning
-    ) 
+    )
 
 # Import EAS module
 try:
@@ -46,30 +47,8 @@ except ImportError:
     warnings.warn(
         "eas_factorize module not available. EAS engine will not be available.",
         ImportWarning
-    ) 
+    )
 
-# Import Z-framework modules
-try:
-    from cognitive_number_theory.divisor_density import kappa
-    from wave_crispr_signal.z_framework import theta_prime
-    Z_AVAILABLE = True
-except ImportError:
-    Z_AVAILABLE = False
-    warnings.warn(
-        "Z-framework modules not available. Z-bias will not be available.",
-
-
-# Import Z-framework modules
-try:
-    from cognitive_number_theory.divisor_density import kappa
-    from wave_crispr_signal.z_framework import theta_prime
-    Z_AVAILABLE = True
-except ImportError:
-    Z_AVAILABLE = False
-    warnings.warn(
-        "Z-framework modules not available. Z-bias will not be available.",
-        ImportWarning
-    ) 
 def _is_power_of_two(n: int) -> bool:
     """Check if n is a power of 2."""
     return n > 0 and (n & (n - 1)) == 0
@@ -83,15 +62,7 @@ def _next_power_of_two(n: int) -> int:
 
 
 def validate_sobol_sample_size(n: int, auto_round: bool = True) -> int:
-def z_bias(samples, n, k=0.3):
-    """Apply Z-framework bias."""
-    if not Z_AVAILABLE:
-        warnings.warn("Z-framework not available, returning original samples")
-        return samples
-    curv = np.array([kappa(int(s)) for s in samples])
-    phase = theta_prime(n, k)
-    weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
-    return samples * weights / weights.max()    Validate and optionally round sample size for Sobol sequences.
+    """Validate and optionally round sample size for Sobol sequences.
     
     Sobol sequences have optimal balance properties when the number of samples
     is a power of 2. This function checks the sample size and optionally rounds
@@ -111,6 +82,7 @@ def z_bias(samples, n, k=0.3):
         >>> validate_sobol_sample_size(200)  # Returns 256 with warning
         >>> validate_sobol_sample_size(256)  # Returns 256, no warning
         >>> validate_sobol_sample_size(200, auto_round=False)  # Raises ValueError
+    """
     if not _is_power_of_two(n):
         if auto_round:
             next_pow2 = _next_power_of_two(n)
@@ -138,41 +110,38 @@ def z_bias(samples, n, k=0.3):
     phase = theta_prime(n, k)
     weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
     return samples * weights / weights.max()
+
 @dataclass
 class QMCConfig:
     """Configuration for QMC engine with replicated randomization"""
     dim: int
     n: int
-    engine: str = "sobol"     # "sobol" | "halton" | "rank1_lattice" | "eas"
-    engine: str = "sobol"     # "sobol" | "halton" | "rank1_lattice" | "elliptic_cyclic"
-    scramble: bool = True     # Owen for Sobol, Faure/QR for Halton (scipy implements)
-    seed: int | None = None
-    replicates: int = 8       # Cranley-Patterson: use random_base for shifts
-    auto_round_sobol: bool = True  # Automatically round to power of 2 for Sobol
+    engine: str = "sobol"  # "sobol", "halton", "rank1_lattice", "elliptic_cyclic", "eas"
+    scramble: bool = True
+    seed: Optional[int] = None
+    replicates: int = 8
+    auto_round_sobol: bool = True
+
     # Rank-1 lattice specific parameters
-    lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic" | "spiral_conical" | "elliptic"
-    subgroup_order: int | None = None  # For cyclic generator (defaults to φ(n)/2)
-    # Spiral-conical specific parameters
-    spiral_depth: int = 3              # Depth of fractal recursion for spiral_conical
-    cone_height: float = 1.0           # Height scaling factor for spiral_conical
-    lattice_generator: str = "cyclic"  # "fibonacci" | "korobov" | "cyclic" | "elliptic_cyclic"
-    subgroup_order: int | None = None  # For cyclic generator (auto-derived if None, deprecated for manual setting)
-    # Geometric parameters for spiral-conical lattice stratification
-    cone_height: float = 1.2           # Height scaling factor for conical geometry
-    spiral_depth: int = 3              # Radial structure depth for spiral stratification
-    subgroup_order: int | None = None  # For cyclic generator (defaults to φ(n)/2)
+    lattice_generator: str = "cyclic"  # "fibonacci", "korobov", "cyclic", "spiral_conical", "elliptic_cyclic"
+    subgroup_order: Optional[int] = None
+
+    # Geometric parameters for spiral-conical and elliptic_cyclic lattices
+    cone_height: float = 1.2
+    spiral_depth: int = 3
+    elliptic_a: Optional[float] = None
+    elliptic_b: Optional[float] = None
+
     # EAS specific parameters
-    eas_max_samples: int = 2000  # Maximum candidates for EAS
-    eas_adaptive_window: bool = True  # Enable adaptive window sizing for EAS
-    eas_reference_point: float = 1000.0  # Reference point for elliptic lattice generation
-    # Elliptic geometry parameters (for elliptic_cyclic)
-    elliptic_a: float | None = None    # Major axis semi-length (defaults to subgroup_order/(2π))
-    elliptic_b: float | None = None    # Minor axis semi-length (defaults to 0.8*a, eccentricity ~0.6)
-    with_z_bias: bool = False  # Apply Z-framework bias to samples
-    z_k: float = 0.3  # k parameter for theta prime (n,k)    with_z_bias: bool = False  # Apply Z-framework bias to samples
-    z_k: float = 0.3  # k parameter for theta'(n,k)
+    eas_max_samples: int = 2000
+    eas_adaptive_window: bool = True
+    eas_reference_point: float = 1000.0
+
+    # Z-bias parameters
+    with_z_bias: bool = False
+    z_k: float = 0.3
 def make_engine(cfg: QMCConfig):
-    Create a QMC engine based on configuration.
+    """Create a QMC engine based on configuration.
     
     For Sobol sequences, validates that n is a power of 2 for optimal balance properties.
     If not and auto_round_sobol is True, automatically rounds to next power of 2 with a warning.
@@ -190,6 +159,7 @@ def make_engine(cfg: QMCConfig):
     Raises:
         ValueError: If engine type is unsupported or if Sobol n is not power of 2
                    and auto_round_sobol is False
+    """
     if cfg.engine == "sobol":
         # Validate power of 2 for Sobol sequences
         if not _is_power_of_two(cfg.n):
@@ -212,7 +182,7 @@ def make_engine(cfg: QMCConfig):
         return qmc.Sobol(d=cfg.dim, scramble=cfg.scramble, seed=cfg.seed)
     elif cfg.engine == "halton":
         return qmc.Halton(d=cfg.dim, scramble=cfg.scramble, seed=cfg.seed)
-    elif cfg.engine == "rank1_lattice":
+    elif cfg.engine in ("rank1_lattice", "elliptic_cyclic"):
         if not RANK1_AVAILABLE:
             raise ValueError(
                 "Rank-1 lattice engine requires rank1_lattice module. "
@@ -226,21 +196,15 @@ def make_engine(cfg: QMCConfig):
                 "Module import failed."
             )
         return EASEngine(cfg)
-    elif cfg.engine == "elliptic_cyclic":
-        if not RANK1_AVAILABLE:
-            raise ValueError(
-                "Elliptic cyclic engine requires rank1_lattice module. "
-                "Module import failed."
-            )
-        return Rank1LatticeEngine(cfg)
     else:
-        raise ValueError(f"Unsupported engine: {cfg.engine}")
+        raise ValueError(f"Unsupported engine: {cfg.engine}. Supported engines are 'sobol', 'halton', 'rank1_lattice', 'elliptic_cyclic', 'eas'.")
 
 class Rank1LatticeEngine:
-    Wrapper class for rank-1 lattice engine to match scipy.stats.qmc interface.
+    """Wrapper class for rank-1 lattice engine to match scipy.stats.qmc interface.
     
     This allows rank-1 lattices to be used seamlessly with existing QMC code
     that expects scipy-style engines with a random() method.
+    """
     
     def __init__(self, cfg: QMCConfig):
         """Initialize rank-1 lattice engine with configuration"""
@@ -264,13 +228,10 @@ class Rank1LatticeEngine:
             scramble=cfg.scramble,
             cone_height=cfg.cone_height,
             spiral_depth=cfg.spiral_depth,
-            spiral_depth=cfg.spiral_depth,
-            cone_height=cfg.cone_height
             elliptic_a=cfg.elliptic_a,
             elliptic_b=cfg.elliptic_b
         )
-        self._points_cache = None
-        
+        self._points_cache = None        
     def random(self, n: Optional[int] = None) -> np.ndarray:
         """
         Generate rank-1 lattice points.

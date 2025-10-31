@@ -19,23 +19,16 @@ class Rank1LatticeConfig:
     """Configuration for rank-1 lattice generation"""
     n: int                      # Number of points (lattice size)
     d: int                      # Dimension
-    subgroup_order: Optional[int] = None  # Order of cyclic subgroup (auto-derived if None, deprecated for manual setting)
-    subgroup_order: Optional[int] = None  # Order of cyclic subgroup (defaults to n)
-    generator_type: str = "fibonacci"     # "fibonacci" | "korobov" | "cyclic" | "spiral_conical" | "elliptic"
+    generator_type: str = "fibonacci"     # "fibonacci", "korobov", "cyclic", "spiral_conical", "elliptic_cyclic"
     seed: Optional[int] = None            # Random seed for randomized constructions
     scramble: bool = True                 # Apply digital scrambling
-    # Spiral-conical specific parameters
-    spiral_depth: int = 3                 # Depth of fractal recursion for spiral_conical
-    cone_height: float = 1.0              # Height scaling factor for spiral_conical
-    generator_type: str = "fibonacci"     # "fibonacci" | "korobov" | "cyclic" | "elliptic_cyclic"
-    seed: Optional[int] = None            # Random seed for randomized constructions
-    scramble: bool = True                 # Apply digital scrambling
-    # Geometric parameters for spiral-conical lattice stratification
+    subgroup_order: Optional[int] = None  # Order of cyclic subgroup (auto-derived if None)
+
+    # Geometric parameters for spiral-conical and elliptic_cyclic lattices
     cone_height: float = 1.2              # Height scaling factor for conical geometry
     spiral_depth: int = 3                 # Radial structure depth for spiral stratification
-    # Elliptic geometry parameters (for elliptic_cyclic)
-    elliptic_a: Optional[float] = None    # Major axis semi-length (defaults to subgroup_order/(2π))
-    elliptic_b: Optional[float] = None    # Minor axis semi-length (defaults to 0.8*a, eccentricity ~0.6)
+    elliptic_a: Optional[float] = None    # Major axis semi-length
+    elliptic_b: Optional[float] = None    # Minor axis semi-length
     
 
 def _gcd(a: int, b: int) -> int:
@@ -381,27 +374,27 @@ def _elliptic_cyclic_generating(cfg: Rank1LatticeConfig) -> np.ndarray:
 def generate_rank1_lattice(cfg: Rank1LatticeConfig) -> np.ndarray:
     """
     Generate rank-1 lattice points in [0,1)^d using subgroup-based construction.
-    
+
     A rank-1 lattice is defined by:
         x_i = {i * z / n} for i = 0, 1, ..., n-1
     where z is the generating vector and {·} denotes fractional part.
-    
+
     This implementation uses group-theoretic constructions to select z,
     ensuring better regularity properties than standard Korobov searches.
-    
+
     Supports generator types:
     - "fibonacci": Golden ratio-based construction
     - "korobov": Primitive root-based construction
     - "cyclic": Cyclic subgroup-based construction
     - "spiral_conical": Spiral-conical lattice with golden angle packing
-    - "elliptic": Alias for cyclic (backward compatibility)
-    
+    - "elliptic_cyclic": Elliptic geometry embedding of cyclic subgroup lattice
+
     Args:
         cfg: Rank1LatticeConfig specifying lattice parameters
-        
+
     Returns:
         Array of shape (n, d) with lattice points in [0,1)^d
-        
+
     Example:
         >>> cfg = Rank1LatticeConfig(n=128, d=2, generator_type="cyclic")
         >>> points = generate_rank1_lattice(cfg)
@@ -410,70 +403,54 @@ def generate_rank1_lattice(cfg: Rank1LatticeConfig) -> np.ndarray:
     """
     n = cfg.n
     d = cfg.d
-    
-    # Handle spiral_conical separately
+
+    # Handle special generator types that have their own point generation logic
     if cfg.generator_type == "spiral_conical":
         return generate_spiral_conical_lattice(cfg)
     
-    # Handle elliptic as alias for cyclic
-    generator_type = cfg.generator_type
-    if generator_type == "elliptic":
-        generator_type = "cyclic"
-    
-    # Generate vector based on type
+    if cfg.generator_type == "elliptic_cyclic":
+        points = _elliptic_cyclic_generating(cfg)
+        if cfg.scramble and cfg.seed is not None:
+            rng = np.random.default_rng(cfg.seed)
+            shift = rng.random(d)
+            points = (points + shift) % 1.0
+        return points
+
+    # Standard rank-1 lattices are defined by a generating vector z
+    generator_type = "cyclic" if cfg.generator_type == "elliptic" else cfg.generator_type
+
     if generator_type == "fibonacci":
         z = _fibonacci_generating_vector(d, n)
     elif generator_type == "korobov":
         z = _korobov_generating_vector(d, n)
-    elif cfg.generator_type == "cyclic":
-        # Determine subgroup order - auto-derive if not explicitly set
+    elif generator_type == "cyclic":
         if cfg.subgroup_order is not None:
-            # User explicitly set subgroup_order - issue deprecation warning
             warnings.warn(
-                f"Manual subgroup_order setting is deprecated and will be removed in a future version. "
-                f"The subgroup_order is now auto-derived based on n, dim, cone_height, and spiral_depth. "
+                f"Manual subgroup_order setting is deprecated. The value is now auto-derived. "
                 f"Using provided value: {cfg.subgroup_order}",
                 DeprecationWarning,
                 stacklevel=2
             )
             subgroup_order = cfg.subgroup_order
         else:
-            # Auto-derive subgroup_order using the scaling formula
             subgroup_order = _derive_subgroup_order(
-                n=n,
-                dim=d,
-                cone_height=cfg.cone_height,
-                spiral_depth=cfg.spiral_depth
+                n=n, dim=d, cone_height=cfg.cone_height, spiral_depth=cfg.spiral_depth
             )
-    elif generator_type == "cyclic":
-        subgroup_order = cfg.subgroup_order if cfg.subgroup_order else max(2, _euler_phi(n) // 2)
         z = _cyclic_subgroup_generating_vector(d, n, subgroup_order, cfg.seed)
-    elif cfg.generator_type == "elliptic_cyclic":
-        # Use elliptic geometry embedding directly
-        points = _elliptic_cyclic_generating(cfg)
-        
-        # Apply digital scrambling if requested (Cranley-Patterson shift)
-        if cfg.scramble and cfg.seed is not None:
-            rng = np.random.default_rng(cfg.seed)
-            shift = rng.random(d)
-            points = (points + shift) % 1.0
-        
-        return points
     else:
-        raise ValueError(f"Unknown generator type: {generator_type}")
-    
+        raise ValueError(f"Unknown generator type for standard rank-1 lattice: {generator_type}")
+
     # Generate lattice points: x_i = {i * z / n}
-    points = np.zeros((n, d))
-    for i in range(n):
-        for k in range(d):
-            points[i, k] = ((i * z[k]) % n) / n
-    
+    i_vals = np.arange(n, dtype=np.int64)
+    z_vals = np.array(z, dtype=np.int64)
+    points = (i_vals[:, np.newaxis] * z_vals[np.newaxis, :]) % n / n
+
     # Apply digital scrambling if requested (Cranley-Patterson shift)
     if cfg.scramble and cfg.seed is not None:
         rng = np.random.default_rng(cfg.seed)
         shift = rng.random(d)
         points = (points + shift) % 1.0
-    
+
     return points
 
 
@@ -634,14 +611,14 @@ class SpiralConicalLatticeEngine:
             r = 1.0
         
         # Golden angle for optimal packing
-        θ = 2 * np.pi * self.golden * k
+        theta = 2 * np.pi * self.golden * k
         
         # Conical height (periodic with cycle m)
         h = ((k % m) / m) * self.cone_height if m > 0 else 0.0
         
         # Spiral coordinates
-        x = r * np.cos(θ)
-        y = r * np.sin(θ)
+        x = r * np.cos(theta)
+        y = r * np.sin(theta)
         
         # Project from cone to unit square
         return self._project_cone(x, y, h)
