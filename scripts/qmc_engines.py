@@ -91,7 +91,7 @@ def z_bias(samples, n, k=0.3):
     curv = np.array([kappa(int(s)) for s in samples])
     phase = theta_prime(n, k)
     weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
-    return samples * weights / weights.max()    """
+    return samples * weights / weights.max()
     Validate and optionally round sample size for Sobol sequences.
     
     Sobol sequences have optimal balance properties when the number of samples
