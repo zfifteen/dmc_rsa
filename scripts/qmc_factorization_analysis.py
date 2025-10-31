@@ -26,7 +26,7 @@ from scipy.stats import qmc
 from typing import List, Tuple, Dict, Optional
 import time
 import hashlib
-from dataclasses import dataclass
+import argparsefrom dataclasses import dataclass
 from collections import defaultdict
 
 # Import enhanced QMC engines
