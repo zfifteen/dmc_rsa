@@ -29,7 +29,11 @@ def z_bias(samples, n, k=0.3):
     samples = np.asarray(samples, dtype=int)
     curv = np.vectorize(kappa)(samples)
     phase = theta_prime(n, k)
-    weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
+    min_curv = 1e-3  # Increased minimum threshold for stability
+    max_weight = 1e3  # Clamp to prevent outlier weights
+    safe_curv = np.maximum(curv, min_curv)
+    weights = 1 / safe_curv * np.sin(phase * samples)
+    weights = np.clip(weights, -max_weight, max_weight)
     return samples * weights / weights.max()
 
 # Modify make_engine to apply: points = z_bias(engine.random(num_samples), n)
