@@ -26,7 +26,7 @@ from scipy.stats import qmc
 from typing import List, Tuple, Dict, Optional
 import time
 import hashlib
-import argparse
+import argparseimport argparse
 from dataclasses import dataclass
 from collections import defaultdict
 
@@ -798,4 +798,22 @@ def main():
     print("="*80)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="QMC RSA Factorization Analysis")
+    parser.add_argument("--semiprimes", nargs="+", required=True, help="Semiprime files")
+    parser.add_argument("--engines", nargs="+", default=["sobol_owen", "mc"], help="Engines")
+    parser.add_argument("--with-z-bias", action="store_true", help="Apply Z bias")
+    parser.add_argument("--num-samples", type=int, default=10000, help="Samples per trial")
+    parser.add_argument("--replicates", type=int, default=100, help="Replicates")
+    parser.add_argument("--output", default="results.csv", help="Output CSV")
+    parser.add_argument("--plots", help="Plots dir")
+    parser.add_argument("--analyze", help="Analyze CSV")
+    parser.add_argument("--bootstrap", type=int, default=1000, help="Bootstrap samples")
+    parser.add_argument("--ci", type=float, default=95, help="CI %")
+    parser.add_argument("--distant-factor-ratio", type=float, default=1.5, help="Min p/q ratio")
+    args = parser.parse_args()
+    if args.analyze:
+        print("Analysis mode not implemented yet")
+    else:
+        print("Benchmark mode not implemented yet")
+        main()
     main()

@@ -12,6 +12,17 @@ import numpy as np
 import warnings
 from scipy.stats import qmc  # pip install scipy
 
+# Import Z-framework modules
+try:
+    from cognitive_number_theory.divisor_density import kappa
+    from wave_crispr_signal.z_framework import theta_prime
+    Z_AVAILABLE = True
+except ImportError:
+    Z_AVAILABLE = False
+    warnings.warn(
+        "Z-framework modules not available. Z-bias will not be available.",
+        ImportWarning
+    )
 # Import rank-1 lattice module
 try:
     from rank1_lattice import (
@@ -131,6 +142,16 @@ def z_bias(samples, n, k=0.3):
     return n
 
 
+def z_bias(samples, n, k=0.3):
+    """Apply Z-framework bias to QMC samples."""
+    if not Z_AVAILABLE:
+        warnings.warn("Z-framework not available, returning original samples")
+        return samples
+    curv = np.array([kappa(int(s)) for s in samples])
+    phase = theta_prime(n, k)
+    weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
+    return samples * weights / weights.max()
+
 @dataclass
 class QMCConfig:
     """Configuration for QMC engine with replicated randomization"""
@@ -162,6 +183,7 @@ class QMCConfig:
     elliptic_a: float | None = None    # Major axis semi-length (defaults to subgroup_order/(2π))
     elliptic_b: float | None = None    # Minor axis semi-length (defaults to 0.8*a, eccentricity ~0.6)
     with_z_bias: bool = False  # Apply Z-framework bias to samples
+    z_k: float = 0.3  # k parameter for theta'(n,k)    with_z_bias: bool = False  # Apply Z-framework bias to samples
     z_k: float = 0.3  # k parameter for θ′(n,k)
 def make_engine(cfg: QMCConfig):
     """
