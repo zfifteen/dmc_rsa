@@ -26,7 +26,8 @@ from cognitive_number_theory.divisor_density import kappa
 from wave_crispr_signal.z_framework import theta_prime
 
 def z_bias(samples, n, k=0.3):
-    curv = np.array([kappa(int(s)) for s in samples])
+    samples = np.asarray(samples, dtype=int)
+    curv = np.vectorize(kappa)(samples)
     phase = theta_prime(n, k)
     weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
     return samples * weights / weights.max()
