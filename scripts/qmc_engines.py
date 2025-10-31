@@ -161,7 +161,6 @@ class QMCConfig:
     # Elliptic geometry parameters (for elliptic_cyclic)
     elliptic_a: float | None = None    # Major axis semi-length (defaults to subgroup_order/(2π))
     elliptic_b: float | None = None    # Minor axis semi-length (defaults to 0.8*a, eccentricity ~0.6)
-    elliptic_b: float | None = None    # Minor axis semi-length (defaults to 0.8*a, eccentricity ~0.6)
     with_z_bias: bool = False  # Apply Z-framework bias to samples
     z_k: float = 0.3  # k parameter for θ′(n,k)
 def make_engine(cfg: QMCConfig):
