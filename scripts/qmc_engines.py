@@ -22,7 +22,7 @@ except ImportError:
     warnings.warn(
         "Z-framework modules not available. Z-bias will not be available.",
         ImportWarning
-    )
+    ) 
 # Import rank-1 lattice module
 try:
     from rank1_lattice import (
@@ -35,7 +35,7 @@ except ImportError:
     warnings.warn(
         "rank1_lattice module not available. Rank-1 lattice engine will not be available.",
         ImportWarning
-    )
+    ) 
 
 # Import EAS module
 try:
@@ -46,7 +46,18 @@ except ImportError:
     warnings.warn(
         "eas_factorize module not available. EAS engine will not be available.",
         ImportWarning
-    )
+    ) 
+
+# Import Z-framework modules
+try:
+    from cognitive_number_theory.divisor_density import kappa
+    from wave_crispr_signal.z_framework import theta_prime
+    Z_AVAILABLE = True
+except ImportError:
+    Z_AVAILABLE = False
+    warnings.warn(
+        "Z-framework modules not available. Z-bias will not be available.",
+
 
 # Import Z-framework modules
 try:
@@ -58,17 +69,7 @@ except ImportError:
     warnings.warn(
         "Z-framework modules not available. Z-bias will not be available.",
         ImportWarning
-    )try:
-    from eas_factorize import EllipticAdaptiveSearch, EASConfig
-    EAS_AVAILABLE = True
-except ImportError:
-    EAS_AVAILABLE = False
-    warnings.warn(
-        "eas_factorize module not available. EAS engine will not be available.",
-        ImportWarning
-    )
-
-
+    ) 
 def _is_power_of_two(n: int) -> bool:
     """Check if n is a power of 2."""
     return n > 0 and (n & (n - 1)) == 0
@@ -83,27 +84,14 @@ def _next_power_of_two(n: int) -> int:
 
 def validate_sobol_sample_size(n: int, auto_round: bool = True) -> int:
 def z_bias(samples, n, k=0.3):
-    """
-    Apply Z-framework bias to QMC samples.
-    
-    Uses κ(n) divisor density for curvature weighting and θ′(n,k) for phase alignment.
-    
-    Args:
-        samples: Array of sample points
-        n: Semiprime modulus
-        k: Phase parameter (default 0.3)
-    
-    Returns:
-        Biased samples array
-    """
+    """Apply Z-framework bias."""
     if not Z_AVAILABLE:
         warnings.warn("Z-framework not available, returning original samples")
         return samples
     curv = np.array([kappa(int(s)) for s in samples])
     phase = theta_prime(n, k)
     weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
-    return samples * weights / weights.max()
-    Validate and optionally round sample size for Sobol sequences.
+    return samples * weights / weights.max()    Validate and optionally round sample size for Sobol sequences.
     
     Sobol sequences have optimal balance properties when the number of samples
     is a power of 2. This function checks the sample size and optionally rounds
@@ -123,7 +111,6 @@ def z_bias(samples, n, k=0.3):
         >>> validate_sobol_sample_size(200)  # Returns 256 with warning
         >>> validate_sobol_sample_size(256)  # Returns 256, no warning
         >>> validate_sobol_sample_size(200, auto_round=False)  # Raises ValueError
-    """
     if not _is_power_of_two(n):
         if auto_round:
             next_pow2 = _next_power_of_two(n)
@@ -143,7 +130,7 @@ def z_bias(samples, n, k=0.3):
 
 
 def z_bias(samples, n, k=0.3):
-    """Apply Z-framework bias to QMC samples."""
+    """Apply Z-framework bias."""
     if not Z_AVAILABLE:
         warnings.warn("Z-framework not available, returning original samples")
         return samples
@@ -151,7 +138,6 @@ def z_bias(samples, n, k=0.3):
     phase = theta_prime(n, k)
     weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
     return samples * weights / weights.max()
-
 @dataclass
 class QMCConfig:
     """Configuration for QMC engine with replicated randomization"""
@@ -183,10 +169,9 @@ class QMCConfig:
     elliptic_a: float | None = None    # Major axis semi-length (defaults to subgroup_order/(2π))
     elliptic_b: float | None = None    # Minor axis semi-length (defaults to 0.8*a, eccentricity ~0.6)
     with_z_bias: bool = False  # Apply Z-framework bias to samples
-    z_k: float = 0.3  # k parameter for theta'(n,k)    with_z_bias: bool = False  # Apply Z-framework bias to samples
-    z_k: float = 0.3  # k parameter for θ′(n,k)
+    z_k: float = 0.3  # k parameter for theta prime (n,k)    with_z_bias: bool = False  # Apply Z-framework bias to samples
+    z_k: float = 0.3  # k parameter for theta'(n,k)
 def make_engine(cfg: QMCConfig):
-    """
     Create a QMC engine based on configuration.
     
     For Sobol sequences, validates that n is a power of 2 for optimal balance properties.
@@ -205,7 +190,6 @@ def make_engine(cfg: QMCConfig):
     Raises:
         ValueError: If engine type is unsupported or if Sobol n is not power of 2
                    and auto_round_sobol is False
-    """
     if cfg.engine == "sobol":
         # Validate power of 2 for Sobol sequences
         if not _is_power_of_two(cfg.n):
@@ -253,12 +237,10 @@ def make_engine(cfg: QMCConfig):
         raise ValueError(f"Unsupported engine: {cfg.engine}")
 
 class Rank1LatticeEngine:
-    """
     Wrapper class for rank-1 lattice engine to match scipy.stats.qmc interface.
     
     This allows rank-1 lattices to be used seamlessly with existing QMC code
     that expects scipy-style engines with a random() method.
-    """
     
     def __init__(self, cfg: QMCConfig):
         """Initialize rank-1 lattice engine with configuration"""
@@ -297,7 +279,7 @@ class Rank1LatticeEngine:
             n: Number of points to generate (must match config.n for lattices)
             
         Returns:
-            Array of shape (n, d) with lattice points in [0,1)^d
+            Array of shape (n, d) with lattice points in [0,1]^d
         """
         if n is not None and n != self.cfg.n:
             warnings.warn(
@@ -318,7 +300,6 @@ class Rank1LatticeEngine:
 
 
 class EASEngine:
-    """
     Wrapper class for Elliptic Adaptive Search (EAS) engine to match scipy.stats.qmc interface.
     
     This allows EAS elliptic lattice sampling to be used seamlessly with existing QMC code
@@ -326,7 +307,6 @@ class EASEngine:
     
     Note: EAS generates points in a deterministic elliptic lattice pattern,
     not truly random points. The "random" method name is kept for API compatibility.
-    """
     
     def __init__(self, cfg: QMCConfig):
         """Initialize EAS engine with configuration"""
@@ -349,13 +329,13 @@ class EASEngine:
         Generate EAS elliptic lattice points.
         
         This generates points using elliptic lattice + golden-angle spiral sampling.
-        The points are normalized to [0,1)^d for compatibility with QMC interface.
+        The points are normalized to [0,1]^d for compatibility with QMC interface.
         
         Args:
             n: Number of points to generate
             
         Returns:
-            Array of shape (n, d) with normalized elliptic lattice points in [0,1)^d
+            Array of shape (n, d) with normalized elliptic lattice points in [0,1]^d
             
         Note:
             The reference_point parameter (from QMCConfig.eas_reference_point) controls
@@ -409,7 +389,6 @@ class EASEngine:
 
 
 def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
-    """
     Generate independent randomized QMC replicates.
     
     This implements Cranley-Patterson randomization by generating multiple
@@ -422,7 +401,6 @@ def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
         
     Yields:
         np.ndarray: QMC point set of shape (n, dim) for each replicate
-    """
     # Independent randomized QMC replicates:
     for r in range(cfg.replicates):
         # Create new seed for each replicate
@@ -454,8 +432,7 @@ def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
 # --- Application-specific mapping ---
 def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int, 
                             residues: Tuple[int, ...] = (1, 3, 7, 9)) -> np.ndarray:
-    """
-    Map [0,1)^2 -> integer candidates with smooth transitions.
+    Map [0,1]^2 -> integer candidates with smooth transitions.
     
     This mapping is designed to preserve low discrepancy properties of QMC
     by avoiding hard discontinuities. It uses soft edges and bounded adjustments
@@ -466,14 +443,13 @@ def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int,
       dim1: residue bucket among {1,3,7,9} for mod 10 filter
     
     Args:
-        X: QMC points in [0,1)^2, shape (n, 2)
+        X: QMC points in [0,1]^2, shape (n, 2)
         N: Semiprime to factor
         window_radius: Search window radius around sqrt(N)
         residues: Allowed residue classes mod 10
         
     Returns:
         np.ndarray: Integer candidates, length <= n
-    """
     if X.shape[1] < 2:
         raise ValueError(f"Expected at least 2 dimensions, got {X.shape[1]}")
     
@@ -503,7 +479,6 @@ def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int,
 
 
 def estimate_l2_discrepancy(points: np.ndarray) -> float:
-    """
     Estimate L2 discrepancy as a proxy for star discrepancy.
     
     The L2 discrepancy is computationally cheaper than star discrepancy
@@ -511,12 +486,11 @@ def estimate_l2_discrepancy(points: np.ndarray) -> float:
     Lower values indicate better uniformity.
     
     Args:
-        points: QMC points in [0,1)^d, shape (n, d)
+        points: QMC points in [0,1]^d, shape (n, d)
         
     Returns:
         float: Estimated L2 discrepancy
-    """
-    if len(points) == 0:
+    """    if len(points) == 0:
         return 1.0
     
     n, d = points.shape
@@ -539,7 +513,6 @@ def estimate_l2_discrepancy(points: np.ndarray) -> float:
 
 
 def stratification_balance(points: np.ndarray, n_bins: int = 10) -> float:
-    """
     Compute stratification balance metric.
     
     Divides each dimension into bins and measures how uniformly points
@@ -547,13 +520,12 @@ def stratification_balance(points: np.ndarray, n_bins: int = 10) -> float:
     worse distributions < 1.0.
     
     Args:
-        points: QMC points in [0,1)^d, shape (n, d)
+        points: QMC points in [0,1]^d, shape (n, d)
         n_bins: Number of bins per dimension
         
     Returns:
         float: Balance metric in [0, 1], higher is better
-    """
-    if len(points) == 0:
+    """    if len(points) == 0:
         return 0.0
     
     n, d = points.shape
