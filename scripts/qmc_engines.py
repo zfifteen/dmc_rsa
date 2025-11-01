@@ -324,6 +324,7 @@ class Rank1LatticeEngine:
 
 
 class EASEngine:
+    """
     Wrapper class for Elliptic Adaptive Search (EAS) engine to match scipy.stats.qmc interface.
     
     This allows EAS elliptic lattice sampling to be used seamlessly with existing QMC code
@@ -331,6 +332,7 @@ class EASEngine:
     
     Note: EAS generates points in a deterministic elliptic lattice pattern,
     not truly random points. The "random" method name is kept for API compatibility.
+    """
     
     def __init__(self, cfg: QMCConfig):
         """Initialize EAS engine with configuration"""
@@ -413,6 +415,7 @@ class EASEngine:
 
 
 def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
+    """
     Generate independent randomized QMC replicates.
     
     This implements Cranley-Patterson randomization by generating multiple
@@ -425,6 +428,7 @@ def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
         
     Yields:
         np.ndarray: QMC point set of shape (n, dim) for each replicate
+    """
     # Independent randomized QMC replicates:
     for r in range(cfg.replicates):
         # Create new seed for each replicate
@@ -456,6 +460,7 @@ def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
 # --- Application-specific mapping ---
 def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int, 
                             residues: Tuple[int, ...] = (1, 3, 7, 9)) -> np.ndarray:
+    """
     Map [0,1]^2 -> integer candidates with smooth transitions.
     
     This mapping is designed to preserve low discrepancy properties of QMC
@@ -474,6 +479,7 @@ def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int,
         
     Returns:
         np.ndarray: Integer candidates, length <= n
+    """
     if X.shape[1] < 2:
         raise ValueError(f"Expected at least 2 dimensions, got {X.shape[1]}")
     
@@ -503,6 +509,7 @@ def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int,
 
 
 def estimate_l2_discrepancy(points: np.ndarray) -> float:
+    """
     Estimate L2 discrepancy as a proxy for star discrepancy.
     
     The L2 discrepancy is computationally cheaper than star discrepancy
@@ -514,7 +521,8 @@ def estimate_l2_discrepancy(points: np.ndarray) -> float:
         
     Returns:
         float: Estimated L2 discrepancy
-    """    if len(points) == 0:
+    """
+    if len(points) == 0:
         return 1.0
     
     n, d = points.shape
@@ -537,6 +545,7 @@ def estimate_l2_discrepancy(points: np.ndarray) -> float:
 
 
 def stratification_balance(points: np.ndarray, n_bins: int = 10) -> float:
+    """
     Compute stratification balance metric.
     
     Divides each dimension into bins and measures how uniformly points
@@ -549,7 +558,8 @@ def stratification_balance(points: np.ndarray, n_bins: int = 10) -> float:
         
     Returns:
         float: Balance metric in [0, 1], higher is better
-    """    if len(points) == 0:
+    """
+    if len(points) == 0:
         return 0.0
     
     n, d = points.shape
