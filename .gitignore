@@ -46,3 +46,6 @@ htmlcov/
 # Temporary files
 /tmp/
 *.tmp
+
+# Demo outputs
+lattice_results.csv
