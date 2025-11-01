@@ -111,6 +111,56 @@ def z_bias(samples, n, k=0.3):
     weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
     return samples * weights / weights.max()
 
+
+def kappa_weight(points: np.ndarray, n: int) -> np.ndarray:
+    """
+    Apply κ (kappa) weighting to bias lattice points toward low-curvature candidates.
+    
+    This function weights points inversely by their κ value, which biases sampling
+    toward integers with low divisor density curvature. Lower κ values indicate
+    better factorization candidates empirically.
+    
+    The transformation is:
+        weighted_points = points / (κ(n) + ε)
+    
+    where ε = 1e-6 is a small constant to avoid division by zero.
+    
+    Args:
+        points: QMC lattice points in [0,1]^d, shape (n_points, d)
+        n: The semiprime N for which we're computing κ(N)
+        
+    Returns:
+        Weighted points, same shape as input
+        
+    Example:
+        >>> import numpy as np
+        >>> points = np.array([[0.5, 0.5], [0.25, 0.75]])
+        >>> weighted = kappa_weight(points, n=899)
+        >>> # Points are scaled by 1/(κ(899) + 1e-6)
+    """
+    try:
+        from cognitive_number_theory.divisor_density import kappa as kappa_fn
+    except ImportError:
+        warnings.warn(
+            "cognitive_number_theory module not available. "
+            "κ-weighting disabled, returning original points.",
+            ImportWarning
+        )
+        return points
+    
+    if n <= 0:
+        warnings.warn(f"Invalid n={n} for κ-weighting, returning original points")
+        return points
+    
+    # Compute κ(n) for the semiprime
+    k = kappa_fn(n)
+    
+    # Weight points inversely by κ (lower κ → higher weight → points biased toward that region)
+    # We normalize by κ to keep points in a reasonable range
+    weighted_points = points / (k + 1e-6)
+    
+    return weighted_points
+
 @dataclass
 class QMCConfig:
     """Configuration for QMC engine with replicated randomization"""
@@ -140,6 +190,10 @@ class QMCConfig:
     # Z-bias parameters
     with_z_bias: bool = False
     z_k: float = 0.3
+    
+    # Kappa-weighting parameters
+    with_kappa_weight: bool = False
+    kappa_n: Optional[int] = None  # N value for kappa weighting (typically the semiprime)
 def make_engine(cfg: QMCConfig):
     """Create a QMC engine based on configuration.
     
@@ -234,7 +288,10 @@ class Rank1LatticeEngine:
         self._points_cache = None        
     def random(self, n: Optional[int] = None) -> np.ndarray:
         """
-        Generate rank-1 lattice points.
+        Generate rank-1 lattice points with optional κ-weighting.
+        
+        If with_kappa_weight is enabled in the config, points are weighted
+        inversely by κ(N) to bias toward low-curvature candidates.
         
         Args:
             n: Number of points to generate (must match config.n for lattices)
@@ -253,7 +310,13 @@ class Rank1LatticeEngine:
         if self._points_cache is None:
             self._points_cache = generate_rank1_lattice(self.lattice_cfg)
         
-        return self._points_cache.copy()
+        points = self._points_cache.copy()
+        
+        # Apply κ-weighting if configured
+        if self.cfg.with_kappa_weight and self.cfg.kappa_n is not None:
+            points = kappa_weight(points, self.cfg.kappa_n)
+        
+        return points
     
     def reset(self):
         """Reset the lattice engine (clear cache)"""

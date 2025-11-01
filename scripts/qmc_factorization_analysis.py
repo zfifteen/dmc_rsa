@@ -808,6 +808,7 @@ if __name__ == "__main__":
     parser.add_argument("--semiprimes", nargs="+", required=True, help="Semiprime files")
     parser.add_argument("--engines", nargs="+", default=["sobol_owen", "mc"], help="Engines")
     parser.add_argument("--with-z-bias", action="store_true", help="Apply Z bias")
+    parser.add_argument("--with-kappa-weight", action="store_true", help="Apply κ-weighting to rank-1 lattices")
     parser.add_argument("--num-samples", type=int, default=10000, help="Samples per trial")
     parser.add_argument("--replicates", type=int, default=100, help="Replicates")
     parser.add_argument("--output", default="results.csv", help="Output CSV")
