@@ -5,7 +5,10 @@ Validates group-theoretic lattice generation and quality metrics
 """
 
 import sys
+import os
 sys.path.append('scripts')
+# Add parent directory to path for cognitive_number_theory module
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 from rank1_lattice import (
@@ -647,6 +650,71 @@ def test_elliptic_cyclic_integration():
     print("  ✓ Elliptic cyclic integration works correctly")
 
 
+def test_kappa_weighting():
+    """Test κ-weighting for rank-1 lattices"""
+    print("Testing κ-weighting for rank-1 lattices...")
+    
+    try:
+        from cognitive_number_theory.divisor_density import kappa
+        from qmc_engines import kappa_weight, make_engine
+    except ImportError as e:
+        print(f"  ⚠ Skipping κ-weighting tests: {e}")
+        return
+    
+    # Test kappa function
+    k_899 = kappa(899)
+    assert k_899 > 0, "κ(899) should be positive"
+    assert 3.0 < k_899 < 5.0, f"κ(899) ≈ 3.68, got {k_899}"
+    print(f"  κ(899) = {k_899:.3f}")
+    
+    # Test kappa weighting function
+    points = np.array([[0.5, 0.5], [0.25, 0.75], [0.1, 0.9]])
+    weighted = kappa_weight(points, 899)
+    
+    # Weighted points should be different from original
+    assert weighted.shape == points.shape
+    assert not np.allclose(weighted, points), "Weighting should change points"
+    print(f"  Weighting applied: shape {weighted.shape}")
+    
+    # Test integration with Rank1LatticeEngine
+    cfg = QMCConfig(
+        dim=2,
+        n=128,
+        engine="rank1_lattice",
+        lattice_generator="fibonacci",
+        with_kappa_weight=True,
+        kappa_n=899,
+        seed=42
+    )
+    
+    engine = make_engine(cfg)
+    points_weighted = engine.random(128)
+    
+    # Should return valid points
+    assert points_weighted.shape == (128, 2)
+    assert np.all(points_weighted >= 0), "All weighted points should be non-negative"
+    print(f"  Generated {len(points_weighted)} κ-weighted lattice points")
+    
+    # Compare with unweighted
+    cfg_unweighted = QMCConfig(
+        dim=2,
+        n=128,
+        engine="rank1_lattice",
+        lattice_generator="fibonacci",
+        with_kappa_weight=False,
+        seed=42
+    )
+    
+    engine_unweighted = make_engine(cfg_unweighted)
+    points_unweighted = engine_unweighted.random(128)
+    
+    # Weighted and unweighted should be different
+    assert not np.allclose(points_weighted, points_unweighted), \
+        "κ-weighted points should differ from unweighted"
+    
+    print("  ✓ κ-weighting integration works correctly")
+
+
 def main():
     """Run all tests"""
     print("="*70)
@@ -673,6 +741,7 @@ def main():
     test_elliptic_cyclic_geometry()
     test_elliptic_vs_cyclic_quality()
     test_elliptic_cyclic_integration()
+    test_kappa_weighting()
     
     print("="*70)
     print("All tests passed! ✓")

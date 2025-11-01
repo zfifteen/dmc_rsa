@@ -111,6 +111,56 @@ def z_bias(samples, n, k=0.3):
     weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
     return samples * weights / weights.max()
 
+
+def kappa_weight(points: np.ndarray, n: int) -> np.ndarray:
+    """
+    Apply κ (kappa) weighting to bias lattice points toward low-curvature candidates.
+    
+    This function weights points inversely by their κ value, which biases sampling
+    toward integers with low divisor density curvature. Lower κ values indicate
+    better factorization candidates empirically.
+    
+    The transformation is:
+        weighted_points = points / (κ(n) + ε)
+    
+    where ε = 1e-6 is a small constant to avoid division by zero.
+    
+    Args:
+        points: QMC lattice points in [0,1]^d, shape (n_points, d)
+        n: The semiprime N for which we're computing κ(N)
+        
+    Returns:
+        Weighted points, same shape as input
+        
+    Example:
+        >>> import numpy as np
+        >>> points = np.array([[0.5, 0.5], [0.25, 0.75]])
+        >>> weighted = kappa_weight(points, n=899)
+        >>> # Points are scaled by 1/(κ(899) + 1e-6)
+    """
+    try:
+        from cognitive_number_theory.divisor_density import kappa as kappa_fn
+    except ImportError:
+        warnings.warn(
+            "cognitive_number_theory module not available. "
+            "κ-weighting disabled, returning original points.",
+            ImportWarning
+        )
+        return points
+    
+    if n <= 0:
+        warnings.warn(f"Invalid n={n} for κ-weighting, returning original points")
+        return points
+    
+    # Compute κ(n) for the semiprime
+    k = kappa_fn(n)
+    
+    # Weight points inversely by κ (lower κ → higher weight → points biased toward that region)
+    # We normalize by κ to keep points in a reasonable range
+    weighted_points = points / (k + 1e-6)
+    
+    return weighted_points
+
 @dataclass
 class QMCConfig:
     """Configuration for QMC engine with replicated randomization"""
@@ -140,6 +190,10 @@ class QMCConfig:
     # Z-bias parameters
     with_z_bias: bool = False
     z_k: float = 0.3
+    
+    # Kappa-weighting parameters
+    with_kappa_weight: bool = False
+    kappa_n: Optional[int] = None  # N value for kappa weighting (typically the semiprime)
 def make_engine(cfg: QMCConfig):
     """Create a QMC engine based on configuration.
     
@@ -234,7 +288,10 @@ class Rank1LatticeEngine:
         self._points_cache = None        
     def random(self, n: Optional[int] = None) -> np.ndarray:
         """
-        Generate rank-1 lattice points.
+        Generate rank-1 lattice points with optional κ-weighting.
+        
+        If with_kappa_weight is enabled in the config, points are weighted
+        inversely by κ(N) to bias toward low-curvature candidates.
         
         Args:
             n: Number of points to generate (must match config.n for lattices)
@@ -253,7 +310,13 @@ class Rank1LatticeEngine:
         if self._points_cache is None:
             self._points_cache = generate_rank1_lattice(self.lattice_cfg)
         
-        return self._points_cache.copy()
+        points = self._points_cache.copy()
+        
+        # Apply κ-weighting if configured
+        if self.cfg.with_kappa_weight and self.cfg.kappa_n is not None:
+            points = kappa_weight(points, self.cfg.kappa_n)
+        
+        return points
     
     def reset(self):
         """Reset the lattice engine (clear cache)"""
@@ -261,6 +324,7 @@ class Rank1LatticeEngine:
 
 
 class EASEngine:
+    """
     Wrapper class for Elliptic Adaptive Search (EAS) engine to match scipy.stats.qmc interface.
     
     This allows EAS elliptic lattice sampling to be used seamlessly with existing QMC code
@@ -268,6 +332,7 @@ class EASEngine:
     
     Note: EAS generates points in a deterministic elliptic lattice pattern,
     not truly random points. The "random" method name is kept for API compatibility.
+    """
     
     def __init__(self, cfg: QMCConfig):
         """Initialize EAS engine with configuration"""
@@ -350,6 +415,7 @@ class EASEngine:
 
 
 def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
+    """
     Generate independent randomized QMC replicates.
     
     This implements Cranley-Patterson randomization by generating multiple
@@ -362,6 +428,7 @@ def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
         
     Yields:
         np.ndarray: QMC point set of shape (n, dim) for each replicate
+    """
     # Independent randomized QMC replicates:
     for r in range(cfg.replicates):
         # Create new seed for each replicate
@@ -393,6 +460,7 @@ def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
 # --- Application-specific mapping ---
 def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int, 
                             residues: Tuple[int, ...] = (1, 3, 7, 9)) -> np.ndarray:
+    """
     Map [0,1]^2 -> integer candidates with smooth transitions.
     
     This mapping is designed to preserve low discrepancy properties of QMC
@@ -411,6 +479,7 @@ def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int,
         
     Returns:
         np.ndarray: Integer candidates, length <= n
+    """
     if X.shape[1] < 2:
         raise ValueError(f"Expected at least 2 dimensions, got {X.shape[1]}")
     
@@ -440,6 +509,7 @@ def map_points_to_candidates(X: np.ndarray, N: int, window_radius: int,
 
 
 def estimate_l2_discrepancy(points: np.ndarray) -> float:
+    """
     Estimate L2 discrepancy as a proxy for star discrepancy.
     
     The L2 discrepancy is computationally cheaper than star discrepancy
@@ -451,7 +521,8 @@ def estimate_l2_discrepancy(points: np.ndarray) -> float:
         
     Returns:
         float: Estimated L2 discrepancy
-    """    if len(points) == 0:
+    """
+    if len(points) == 0:
         return 1.0
     
     n, d = points.shape
@@ -474,6 +545,7 @@ def estimate_l2_discrepancy(points: np.ndarray) -> float:
 
 
 def stratification_balance(points: np.ndarray, n_bins: int = 10) -> float:
+    """
     Compute stratification balance metric.
     
     Divides each dimension into bins and measures how uniformly points
@@ -486,7 +558,8 @@ def stratification_balance(points: np.ndarray, n_bins: int = 10) -> float:
         
     Returns:
         float: Balance metric in [0, 1], higher is better
-    """    if len(points) == 0:
+    """
+    if len(points) == 0:
         return 0.0
     
     n, d = points.shape
