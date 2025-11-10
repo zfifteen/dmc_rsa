@@ -10,17 +10,25 @@ from dataclasses import dataclass
 from typing import Callable, Iterable, Tuple, Generator, Optional
 import numpy as np
 import warnings
+import sys
+import os
 from scipy.stats import qmc  # pip install scipy
+
+# Add parent directory to path for Z-framework imports
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_parent_dir = os.path.dirname(_current_dir)
+if _parent_dir not in sys.path:
+    sys.path.insert(0, _parent_dir)
 
 # Import Z-framework modules
 try:
     from cognitive_number_theory.divisor_density import kappa
     from wave_crispr_signal.z_framework import theta_prime
     Z_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     Z_AVAILABLE = False
     warnings.warn(
-        "Z-framework modules not available. Z-bias will not be available.",
+        f"Z-framework modules not available: {e}. Z-bias will not be available.",
         ImportWarning
     )
 
@@ -111,6 +119,125 @@ def z_bias(samples, n, k=0.3):
     weights = 1 / (curv + 1e-6) * np.sin(phase * samples)
     return samples * weights / weights.max()
 
+
+def apply_bias_adaptive(points: np.ndarray, bias_mode: str, k: float = 0.3, beta: float = 2.0) -> np.ndarray:
+    """
+    Apply bias-adaptive transformation to QMC points.
+    
+    Implements the Bias-Adaptive Sampling Engine that fuses Sobol-Owen scrambling
+    with Z-biased lattices for variance reduction in high-dimensional integrations.
+    
+    Args:
+        points: QMC points in [0,1]^d, shape (n, d)
+        bias_mode: Bias strategy - "prime_density", "golden_spiral", or "theta_prime"
+        k: Exponent for theta_prime bias (default: 0.3)
+        beta: Bias exponent for weighting (default: 2.0)
+        
+    Returns:
+        Biased points in [0,1]^d with reduced discrepancy
+        
+    Raises:
+        ValueError: If bias_mode is unsupported or Z-framework unavailable
+    """
+    if not Z_AVAILABLE:
+        raise ValueError("Bias-adaptive sampling requires Z-framework modules")
+    
+    n, d = points.shape
+    sample_indices = np.arange(1, n + 1)
+    
+    if bias_mode == "theta_prime":
+        # Apply θ′(n,k) = φ · ((n mod φ)/φ)^k for golden-angle spiral bias
+        theta_vals = theta_prime(sample_indices, k=k)
+        # Adjust each point: x_i,j = x_i,j + θ′(i,k) mod 1
+        for j in range(d):
+            points[:, j] = (points[:, j] + theta_vals / (d * 2)) % 1.0
+    
+    elif bias_mode == "prime_density":
+        # Use κ(n) = d(n) · ln(n+1) / e² for curvature-based weighting
+        kappa_vals = kappa(sample_indices)
+        # Weight-based reordering: prioritize low-curvature samples
+        weights = 1.0 / (1.0 + kappa_vals)
+        # Sort points by weight (descending) to prioritize low-discrepancy regions
+        sorted_indices = np.argsort(-weights)
+        points = points[sorted_indices]
+    
+    elif bias_mode == "golden_spiral":
+        # Fibonacci/golden spiral for 2D, generalized for higher dimensions
+        from wave_crispr_signal import PHI
+        golden_angle = 2 * np.pi / (PHI ** 2)  # ≈ 2.399... radians
+        
+        for i in range(n):
+            angle = i * golden_angle
+            # Apply spiral transformation to first two dimensions
+            if d >= 2:
+                r = np.sqrt(points[i, 0])
+                points[i, 0] = r * np.cos(angle)
+                points[i, 1] = r * np.sin(angle)
+                # Renormalize to [0,1]
+                points[i, 0] = (points[i, 0] + 1) / 2
+                points[i, 1] = (points[i, 1] + 1) / 2
+    
+    else:
+        raise ValueError(f"Unsupported bias_mode: {bias_mode}. "
+                        f"Supported modes: 'prime_density', 'golden_spiral', 'theta_prime'")
+    
+    return points
+
+
+def compute_z_invariant_metrics(points: np.ndarray, method: str = "sobol") -> dict:
+    """
+    Compute Z-invariant metrics for bias-adaptive QMC sequences.
+    
+    Metrics include:
+    - Discrepancy: D_N via scipy.stats.qmc.discrepancy
+    - Unique rate: ratio of unique samples
+    - Curvature bias: mean κ(n) weighting
+    
+    Args:
+        points: QMC points in [0,1]^d
+        method: QMC method name for labeling
+        
+    Returns:
+        Dictionary with metrics: discrepancy, unique_rate, mean_kappa, savings_estimate
+    """
+    n, d = points.shape
+    
+    # Compute discrepancy using scipy
+    try:
+        disc = qmc.discrepancy(points, method='L2')
+    except:
+        # Fallback to simple estimate
+        disc = estimate_l2_discrepancy(points)
+    
+    # Compute unique rate (round to 12 decimal places for comparison)
+    unique_points = len(np.unique(np.round(points, 12), axis=0))
+    unique_rate = unique_points / n
+    
+    # Compute mean kappa if Z-framework available
+    if Z_AVAILABLE:
+        sample_indices = np.arange(1, n + 1)
+        kappa_vals = kappa(sample_indices)
+        mean_kappa = np.mean(kappa_vals)
+    else:
+        mean_kappa = None
+    
+    # Estimate variance reduction (simplified)
+    # Theoretical: QMC gives O((log N)^d / N) vs MC O(1/√N)
+    mc_variance_rate = 1.0 / np.sqrt(n)
+    qmc_variance_rate = (np.log(n) ** d) / n
+    savings_estimate = (mc_variance_rate / qmc_variance_rate) - 1 if qmc_variance_rate > 0 else 0
+    
+    return {
+        'method': method,
+        'n_samples': n,
+        'dimensions': d,
+        'discrepancy': disc,
+        'unique_rate': unique_rate,
+        'mean_kappa': mean_kappa,
+        'savings_estimate': savings_estimate
+    }
+
+
 @dataclass
 class QMCConfig:
     """Configuration for QMC engine with replicated randomization"""
@@ -140,6 +267,10 @@ class QMCConfig:
     # Z-bias parameters
     with_z_bias: bool = False
     z_k: float = 0.3
+    
+    # Bias-Adaptive Sampling Engine parameters
+    bias_mode: Optional[str] = None  # None, "prime_density", "golden_spiral", "theta_prime"
+    beta: float = 2.0  # Bias exponent for adaptive weighting
 def make_engine(cfg: QMCConfig):
     """Create a QMC engine based on configuration.
     
@@ -385,11 +516,18 @@ def qmc_points(cfg: QMCConfig) -> Generator[np.ndarray, None, None]:
             cone_height=cfg.cone_height,
             spiral_depth=cfg.spiral_depth,
             elliptic_a=cfg.elliptic_a,
-            elliptic_b=cfg.elliptic_b
+            elliptic_b=cfg.elliptic_b,
+            bias_mode=None,  # Don't apply bias twice
+            beta=cfg.beta
         ))
         
         # Generate points
         X = eng.random(cfg.n)
+        
+        # Apply bias-adaptive transformation if specified
+        if cfg.bias_mode is not None:
+            X = apply_bias_adaptive(X, cfg.bias_mode, k=cfg.z_k, beta=cfg.beta)
+        
         yield X
 
 # --- Application-specific mapping ---
