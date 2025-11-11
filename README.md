@@ -33,6 +33,14 @@ Key features:
   - Demo: 45x improvement over MC in integration tests
   - Bootstrap confidence interval analysis with 1000+ iterations
   - Full CLI tools: `run_demo.py` and `discrepancy_test.py`
+- **✨ NEW: Z5D Extension with k*≈0.04449 (November 2025)**
+  - Extended θ′(n,k) to Z5D for 210% prime density boost at N=10^6
+  - High-precision validation with mpmath dps=50 (<10^{-16} error)
+  - Curvature reduction: 55.73% mean, 95% CI [53.84%, 57.50%] (target: 56.5% [52.1%, 60.9%]) ✓
+  - Latency: 0.0007 ms (target: <0.019 ms) ✓
+  - Complete demo suite: `examples/demo_complete.py`
+  - Curvature analysis tool: `bin/curvature_test.py`
+  - See [docs/Z5D_EXTENSION_SUMMARY.md](docs/Z5D_EXTENSION_SUMMARY.md) for details
 - **Rank-1 lattice constructions with group-theoretic foundations**
   - Cyclic subgroup-based generating vectors
   - Fibonacci and Korobov construction methods
@@ -194,6 +202,27 @@ python scripts/test_z_framework.py      # Z-framework tests
 python scripts/test_bias_adaptive.py     # Bias-adaptive engine tests
 ```
 
+### Running Z5D Extension Validation (New - November 2025)
+```bash
+# Run full test suite with all benchmarks
+python examples/demo_complete.py
+
+# Quick validation mode (reduced sample sizes)
+python examples/demo_complete.py --quick
+
+# Skip Z5D validation for faster testing
+python examples/demo_complete.py --no-z5d
+
+# Verbose output with detailed statistics
+python examples/demo_complete.py --verbose
+
+# Curvature reduction analysis
+python bin/curvature_test.py --slots 1000 --prime nearest --output results/curvature.csv --verbose
+
+# Z5D unit tests
+python scripts/test_z5d_extension.py
+```
+
 ### Quick Example: Bias-Adaptive Sampling Engine
 ```python
 from scripts.qmc_engines import QMCConfig, make_engine, apply_bias_adaptive, compute_z_invariant_metrics
@@ -222,6 +251,57 @@ print(f"Mean kappa:      {metrics['mean_kappa']:.4f}")
 print(f"Savings est:     {metrics['savings_estimate']:.2f}x")
 
 # Available bias modes: 'theta_prime', 'prime_density', 'golden_spiral'
+```
+
+### Quick Example: Z5D Extension with k*≈0.04449
+```python
+from wave_crispr_signal import (
+    theta_prime, K_Z5D, theta_prime_high_precision,
+    compute_prime_density_boost, validate_z5d_extension
+)
+
+# Compute theta with Z5D k value
+theta = theta_prime(1000000, k=K_Z5D)  # k=0.04449
+print(f"θ'(10^6, k={K_Z5D}) = {theta:.6f}")
+
+# High-precision computation (mpmath dps=50)
+theta_hp = theta_prime_high_precision(1000000, k=K_Z5D, dps=50)
+print(f"High-precision: {theta_hp}")
+
+# Prime density boost analysis
+boost = compute_prime_density_boost(n_samples=1000000, k=K_Z5D, baseline_k=0.3)
+print(f"Prime density boost: {boost['boost_percent']:.1f}%")
+
+# Comprehensive validation with bootstrap CI
+results = validate_z5d_extension(
+    n_samples=1000000,
+    k=K_Z5D,
+    n_bootstrap=1000,
+    confidence=0.95,
+    dps=50
+)
+print(f"Max error: {results['max_error']:.2e}")
+print(f"All errors < 10^-16: {results['all_errors_valid']}")
+```
+
+### Quick Example: Curvature Reduction Analysis
+```python
+from cognitive_number_theory import kappa
+import sympy
+
+# Analyze curvature reduction for a slot
+slot = 1000
+prime_slot = int(sympy.nextprime(slot - 1))
+
+baseline_k = float(kappa(slot))
+biased_k = float(kappa(prime_slot))
+
+reduction = (1.0 - biased_k / baseline_k) * 100.0
+print(f"Slot {slot} -> Prime {prime_slot}")
+print(f"Curvature reduction: {reduction:.2f}%")
+
+# Or use the command-line tool
+# python bin/curvature_test.py --slots 1000 --prime nearest --output curvature.csv
 ```
 
 ### Quick Example: Elliptic Cyclic Lattice
