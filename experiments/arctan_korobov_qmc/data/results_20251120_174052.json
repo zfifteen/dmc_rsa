@@ -1,0 +1,555 @@
+{
+  "metadata": {
+    "start_time": "2025-11-20T17:40:43.776835",
+    "n_bootstrap": 100,
+    "n_trials_per_test": 20,
+    "seed": 42,
+    "end_time": "2025-11-20T17:40:52.807636",
+    "total_runtime_seconds": -2.384185791015625e-07
+  },
+  "experiments": [
+    {
+      "description": "ProductCosine-2D-127pts",
+      "function": "ProductCosine",
+      "dimension": 2,
+      "n_points": 127,
+      "n_trials": 20,
+      "analytical_integral": 0.0,
+      "baseline": {
+        "mean_error": 2.1674396611482457e-17,
+        "std_error": 1.7143110098755904e-17,
+        "median_error": 1.3768513888067886e-17,
+        "mean_variance": 0.0019685039370078736,
+        "std_variance": 5.311484201212962e-19,
+        "rmse": 2.7634501846964948e-17,
+        "estimates_mean": 1.4261100229425463e-18,
+        "estimates_std": 2.759767929613597e-17
+      },
+      "arctan_results": {
+        "0.5": {
+          "mean_error": 2.816057208068964e-17,
+          "std_error": 2.1006646920762614e-17,
+          "median_error": 2.7653131315866502e-17,
+          "mean_variance": 0.001968503937007873,
+          "std_variance": 7.385319077612973e-19,
+          "rmse": 3.513256373744026e-17,
+          "estimates_mean": 7.748203872030267e-18,
+          "estimates_std": 3.426751189571192e-17
+        },
+        "1.0": {
+          "mean_error": 8.326126315089943e-17,
+          "std_error": 4.1808136540483864e-17,
+          "median_error": 8.474192476346545e-17,
+          "mean_variance": 0.001968503937007873,
+          "std_variance": 8.113426134873485e-19,
+          "rmse": 9.316844005601393e-17,
+          "estimates_mean": -2.7815676271489536e-17,
+          "estimates_std": 8.891932509882628e-17
+        },
+        "1.5": {
+          "mean_error": 7.534436766526037e-17,
+          "std_error": 3.797171228171906e-17,
+          "median_error": 7.955141357550335e-17,
+          "mean_variance": 0.001968503937007874,
+          "std_variance": 5.818439421673296e-19,
+          "rmse": 8.43719424482072e-17,
+          "estimates_mean": -3.795083232798394e-17,
+          "estimates_std": 7.535488702198972e-17
+        },
+        "2.0": {
+          "mean_error": 4.47845500841351e-17,
+          "std_error": 3.228484306000487e-17,
+          "median_error": 3.734436207339048e-17,
+          "mean_variance": 0.001968503937007874,
+          "std_variance": 4.7507358941313415e-19,
+          "rmse": 5.5208396260419935e-17,
+          "estimates_mean": -1.1529764457260026e-17,
+          "estimates_std": 5.399103211837734e-17
+        }
+      },
+      "variance_reductions": {
+        "0.5": 2.2030988144905456e-14,
+        "1.0": 2.2030988144905456e-14,
+        "1.5": -2.2030988144905456e-14,
+        "2.0": -2.2030988144905456e-14
+      },
+      "runtime_seconds": 0.9306032657623291
+    },
+    {
+      "description": "ProductCosine-2D-251pts",
+      "function": "ProductCosine",
+      "dimension": 2,
+      "n_points": 251,
+      "n_trials": 20,
+      "analytical_integral": 0.0,
+      "baseline": {
+        "mean_error": 2.9768131297718336e-17,
+        "std_error": 2.518548863360433e-17,
+        "median_error": 2.8308475528290844e-17,
+        "mean_variance": 0.0009960159362549798,
+        "std_variance": 3.998340051969456e-19,
+        "rmse": 3.899295421831502e-17,
+        "estimates_mean": 6.634798951943173e-19,
+        "estimates_std": 3.89873091287445e-17
+      },
+      "arctan_results": {
+        "0.5": {
+          "mean_error": 4.670898462167989e-17,
+          "std_error": 4.055627555971227e-17,
+          "median_error": 3.5385594410363554e-17,
+          "mean_variance": 0.0009960159362549798,
+          "std_variance": 4.775415207702088e-19,
+          "rmse": 6.185903920740803e-17,
+          "estimates_mean": -4.246271329243626e-18,
+          "estimates_std": 6.171312592522021e-17
+        },
+        "1.0": {
+          "mean_error": 7.836250462157541e-17,
+          "std_error": 5.2543580346356735e-17,
+          "median_error": 7.148995870718762e-17,
+          "mean_variance": 0.0009960159362549798,
+          "std_variance": 4.19909695795826e-19,
+          "rmse": 9.434781378590854e-17,
+          "estimates_mean": -1.2899154962402837e-17,
+          "estimates_std": 9.346187333579609e-17
+        },
+        "1.5": {
+          "mean_error": 7.630709919625469e-17,
+          "std_error": 5.071140902821406e-17,
+          "median_error": 8.012901984253028e-17,
+          "mean_variance": 0.0009960159362549798,
+          "std_variance": 3.1046825404125873e-19,
+          "rmse": 9.162106959304657e-17,
+          "estimates_mean": 4.9346317205077535e-19,
+          "estimates_std": 9.161974070838508e-17
+        },
+        "2.0": {
+          "mean_error": 8.019813233161302e-17,
+          "std_error": 5.55348357921323e-17,
+          "median_error": 6.723262937969076e-17,
+          "mean_variance": 0.0009960159362549798,
+          "std_variance": 3.2526065174565133e-19,
+          "rmse": 9.754926148330399e-17,
+          "estimates_mean": -1.2788574979870453e-17,
+          "estimates_std": 9.670734597703654e-17
+        }
+      },
+      "variance_reductions": {
+        "0.5": 0.0,
+        "1.0": 0.0,
+        "1.5": 0.0,
+        "2.0": 0.0
+      },
+      "runtime_seconds": 1.798215627670288
+    },
+    {
+      "description": "ProductCosine-3D-127pts",
+      "function": "ProductCosine",
+      "dimension": 3,
+      "n_points": 127,
+      "n_trials": 20,
+      "analytical_integral": 0.0,
+      "baseline": {
+        "mean_error": 2.93537066919225e-17,
+        "std_error": 2.352624366488914e-17,
+        "median_error": 2.3712440585005805e-17,
+        "mean_variance": 0.000984251968503937,
+        "std_variance": 1.939479807224432e-19,
+        "rmse": 3.761813708219949e-17,
+        "estimates_mean": 1.8751404628511502e-17,
+        "estimates_std": 3.2611486657203934e-17
+      },
+      "arctan_results": {
+        "0.5": {
+          "mean_error": 2.4402915165404446e-17,
+          "std_error": 1.6390641312981507e-17,
+          "median_error": 2.4122217784055444e-17,
+          "mean_variance": 0.0009842519685039366,
+          "std_variance": 3.7243567685847434e-19,
+          "rmse": 2.939652005290324e-17,
+          "estimates_mean": 4.0759172065470805e-18,
+          "estimates_std": 2.9112579585912956e-17
+        },
+        "1.0": {
+          "mean_error": 6.924648277035579e-17,
+          "std_error": 4.128848230757202e-17,
+          "median_error": 6.627463232629502e-17,
+          "mean_variance": 0.000984251968503937,
+          "std_variance": 2.1190536614586095e-18,
+          "rmse": 8.062142486540329e-17,
+          "estimates_mean": -1.3655238237861842e-18,
+          "estimates_std": 8.060985976922763e-17
+        },
+        "1.5": {
+          "mean_error": 5.5312878826092665e-17,
+          "std_error": 3.5595738228950813e-17,
+          "median_error": 5.5292603391764686e-17,
+          "mean_variance": 0.0009842519685039368,
+          "std_variance": 2.120717186766324e-18,
+          "rmse": 6.57766762925431e-17,
+          "estimates_mean": 7.220743783628557e-18,
+          "estimates_std": 6.537914042953753e-17
+        },
+        "2.0": {
+          "mean_error": 5.754319794473259e-17,
+          "std_error": 3.349114430121709e-17,
+          "median_error": 6.257639310487202e-17,
+          "mean_variance": 0.0009842519685039368,
+          "std_variance": 1.9761053194178795e-18,
+          "rmse": 6.657984962668225e-17,
+          "estimates_mean": -7.211160973088284e-18,
+          "estimates_std": 6.618818273477396e-17
+        }
+      },
+      "variance_reductions": {
+        "0.5": 4.40619762898109e-14,
+        "1.0": 0.0,
+        "1.5": 2.203098814490545e-14,
+        "2.0": 2.203098814490545e-14
+      },
+      "runtime_seconds": 0.911963939666748
+    },
+    {
+      "description": "SmoothPeriodic-2D-127pts",
+      "function": "SmoothPeriodic",
+      "dimension": 2,
+      "n_points": 127,
+      "n_trials": 20,
+      "analytical_integral": 1.0,
+      "baseline": {
+        "mean_error": 8.326672684688674e-17,
+        "std_error": 9.205483015737869e-17,
+        "median_error": 5.551115123125783e-17,
+        "mean_variance": 0.002057364356586927,
+        "std_variance": 0.0003922931330263722,
+        "rmse": 1.2412670766236366e-16,
+        "estimates_mean": 1.0,
+        "estimates_std": 1.2412670766236366e-16
+      },
+      "arctan_results": {
+        "0.5": {
+          "mean_error": 1.27675647831893e-16,
+          "std_error": 8.063460480619539e-17,
+          "median_error": 1.1102230246251565e-16,
+          "mean_variance": 0.002036973302297019,
+          "std_variance": 0.00034080167332199924,
+          "rmse": 1.510066572755813e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.510066572755813e-16
+        },
+        "1.0": {
+          "mean_error": 8.881784197001253e-17,
+          "std_error": 9.678699938266253e-17,
+          "median_error": 5.551115123125783e-17,
+          "mean_variance": 0.0020915354330708668,
+          "std_variance": 7.385319077612973e-19,
+          "rmse": 1.3136335981433191e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.3136335981433191e-16
+        },
+        "1.5": {
+          "mean_error": 9.992007221626409e-17,
+          "std_error": 9.867878089448545e-17,
+          "median_error": 1.1102230246251565e-16,
+          "mean_variance": 0.0020915354330708668,
+          "std_variance": 5.818439421673296e-19,
+          "rmse": 1.4043333874306804e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.4043333874306804e-16
+        },
+        "2.0": {
+          "mean_error": 1.27675647831893e-16,
+          "std_error": 9.469493028175781e-17,
+          "median_error": 1.1102230246251565e-16,
+          "mean_variance": 0.0020915354330708655,
+          "std_variance": 8.564510931238907e-19,
+          "rmse": 1.5895974606912447e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.5895974606912447e-16
+        }
+      },
+      "variance_reductions": {
+        "0.5": 0.9911250880099677,
+        "1.0": -1.6609151594629563,
+        "1.5": -1.6609151594629563,
+        "2.0": -1.6609151594628928
+      },
+      "runtime_seconds": 0.8998525142669678
+    },
+    {
+      "description": "SmoothPeriodic-2D-251pts",
+      "function": "SmoothPeriodic",
+      "dimension": 2,
+      "n_points": 251,
+      "n_trials": 20,
+      "analytical_integral": 1.0,
+      "baseline": {
+        "mean_error": 6.661338147750939e-17,
+        "std_error": 8.158439733063109e-17,
+        "median_error": 0.0,
+        "mean_variance": 0.0009808342484392476,
+        "std_variance": 0.0001699136947508124,
+        "rmse": 1.0532500405730103e-16,
+        "estimates_mean": 1.0,
+        "estimates_std": 1.0532500405730103e-16
+      },
+      "arctan_results": {
+        "0.5": {
+          "mean_error": 6.106226635438361e-17,
+          "std_error": 8.933674322215193e-17,
+          "median_error": 0.0,
+          "mean_variance": 0.0010746797382242357,
+          "std_variance": 0.0001696988201239652,
+          "rmse": 1.0821115497893178e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.0821115497893178e-16
+        },
+        "1.0": {
+          "mean_error": 8.326672684688674e-17,
+          "std_error": 9.852251986074894e-17,
+          "median_error": 0.0,
+          "mean_variance": 0.001058266932270916,
+          "std_variance": 3.28854801205107e-19,
+          "rmse": 1.2899625854847775e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.2899625854847775e-16
+        },
+        "1.5": {
+          "mean_error": 7.216449660063518e-17,
+          "std_error": 8.063460480619539e-17,
+          "median_error": 5.551115123125783e-17,
+          "mean_variance": 0.001058266932270916,
+          "std_variance": 3.5630519205985066e-19,
+          "rmse": 1.0821115497893178e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.0821115497893178e-16
+        },
+        "2.0": {
+          "mean_error": 8.881784197001253e-17,
+          "std_error": 9.678699938266252e-17,
+          "median_error": 5.551115123125783e-17,
+          "mean_variance": 0.001058266932270916,
+          "std_variance": 5.13138124274734e-19,
+          "rmse": 1.3136335981433191e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.3136335981433191e-16
+        }
+      },
+      "variance_reductions": {
+        "0.5": -9.567925460832935,
+        "1.0": -7.894573823750877,
+        "1.5": -7.894573823750877,
+        "2.0": -7.894573823750877
+      },
+      "runtime_seconds": 1.7815208435058594
+    },
+    {
+      "description": "SmoothPeriodic-3D-127pts",
+      "function": "SmoothPeriodic",
+      "dimension": 3,
+      "n_points": 127,
+      "n_trials": 20,
+      "analytical_integral": 1.0,
+      "baseline": {
+        "mean_error": 1.1102230246251565e-16,
+        "std_error": 8.599750569898517e-17,
+        "median_error": 1.1102230246251565e-16,
+        "mean_variance": 0.0032429069726167383,
+        "std_variance": 0.0005651975910615479,
+        "rmse": 1.4043333874306804e-16,
+        "estimates_mean": 1.0,
+        "estimates_std": 1.4043333874306804e-16
+      },
+      "arctan_results": {
+        "0.5": {
+          "mean_error": 1.0547118733938987e-16,
+          "std_error": 9.59877536665409e-17,
+          "median_error": 1.1102230246251565e-16,
+          "mean_variance": 0.003368270948239852,
+          "std_variance": 0.0006257671345741263,
+          "rmse": 1.4261072965499198e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.4261072965499198e-16
+        },
+        "1.0": {
+          "mean_error": 1.7763568394002506e-16,
+          "std_error": 1.464484751053976e-16,
+          "median_error": 2.220446049250313e-16,
+          "mean_variance": 0.0033372293307086633,
+          "std_variance": 3.637494249185236e-18,
+          "rmse": 2.3022074639253675e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 2.3022074639253675e-16
+        },
+        "1.5": {
+          "mean_error": 1.609823385706477e-16,
+          "std_error": 1.189286740512138e-16,
+          "median_error": 2.220446049250313e-16,
+          "mean_variance": 0.003337229330708661,
+          "std_variance": 4.063661482007513e-18,
+          "rmse": 2.0014830212433605e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 2.0014830212433605e-16
+        },
+        "2.0": {
+          "mean_error": 9.43689570931383e-17,
+          "std_error": 1.0099368784966118e-16,
+          "median_error": 1.1102230246251565e-16,
+          "mean_variance": 0.003337229330708661,
+          "std_variance": 2.5784871627081758e-18,
+          "rmse": 1.382216518795857e-16,
+          "estimates_mean": 1.0,
+          "estimates_std": 1.382216518795857e-16
+        }
+      },
+      "variance_reductions": {
+        "0.5": -3.8657900668040512,
+        "1.0": -2.908574278830306,
+        "1.5": -2.9085742788302396,
+        "2.0": -2.9085742788302396
+      },
+      "runtime_seconds": 0.901339054107666
+    },
+    {
+      "description": "MultiFrequency-2D-127pts",
+      "function": "MultiFrequencyCosine",
+      "dimension": 2,
+      "n_points": 127,
+      "n_trials": 20,
+      "analytical_integral": 0.0,
+      "baseline": {
+        "mean_error": 0.004826235679634161,
+        "std_error": 0.002123812391966303,
+        "median_error": 0.005080810828981484,
+        "mean_variance": 0.003942700256324437,
+        "std_variance": 0.00014261058696123346,
+        "rmse": 0.005272867333021326,
+        "estimates_mean": -0.000993890654443207,
+        "estimates_std": 0.005178350246811614
+      },
+      "arctan_results": {
+        "0.5": {
+          "mean_error": 0.004572690923501847,
+          "std_error": 0.0022935040597320813,
+          "median_error": 0.0055291271880402795,
+          "mean_variance": 0.003930606291901655,
+          "std_variance": 0.0001385700504881026,
+          "rmse": 0.0051156293018438815,
+          "estimates_mean": 0.0007557481108063284,
+          "estimates_std": 0.005059496807677259
+        },
+        "1.0": {
+          "mean_error": 0.005093961479910035,
+          "std_error": 0.0022122736947650097,
+          "median_error": 0.005808813740187097,
+          "mean_variance": 0.0039341427499196245,
+          "std_variance": 2.7177919617456605e-05,
+          "rmse": 0.005553611298907806,
+          "estimates_mean": -0.0005344804537141259,
+          "estimates_std": 0.005527832224656785
+        },
+        "1.5": {
+          "mean_error": 0.004798783588445851,
+          "std_error": 0.0023933144885172793,
+          "median_error": 0.005311099449727258,
+          "mean_variance": 0.003937098484118823,
+          "std_variance": 2.982352665048548e-05,
+          "rmse": 0.005362488057766093,
+          "estimates_mean": -0.0019683580526678682,
+          "estimates_std": 0.004988170480865858
+        },
+        "2.0": {
+          "mean_error": 0.005328155905727513,
+          "std_error": 0.0017334270120350844,
+          "median_error": 0.005568730160626263,
+          "mean_variance": 0.003933361547033363,
+          "std_variance": 2.455718002123588e-05,
+          "rmse": 0.005603036191369091,
+          "estimates_mean": 0.00035891721199393813,
+          "estimates_std": 0.005591528681561631
+        }
+      },
+      "variance_reductions": {
+        "0.5": 0.30674318706784226,
+        "1.0": 0.21704684222660278,
+        "1.5": 0.14207958610670438,
+        "2.0": 0.23686074730367626
+      },
+      "runtime_seconds": 0.9020030498504639
+    },
+    {
+      "description": "GenzContinuous-2D-127pts",
+      "function": "GenzContinuous",
+      "dimension": 2,
+      "n_points": 127,
+      "n_trials": 20,
+      "analytical_integral": 0.15785112094905465,
+      "baseline": {
+        "mean_error": 0.017370265286531694,
+        "std_error": 0.011647738057056108,
+        "median_error": 0.014903259737770819,
+        "mean_variance": 0.00021572704924217168,
+        "std_variance": 0.00010430977790161725,
+        "rmse": 0.02091401247896446,
+        "estimates_mean": 0.14048085566252294,
+        "estimates_std": 0.011647738057056108
+      },
+      "arctan_results": {
+        "0.5": {
+          "mean_error": 0.017498356610572568,
+          "std_error": 0.011384808316498431,
+          "median_error": 0.01567554102626327,
+          "mean_variance": 0.000213922957227788,
+          "std_variance": 0.00010258712375275407,
+          "rmse": 0.02087597529396365,
+          "estimates_mean": 0.14035276433848207,
+          "estimates_std": 0.011384808316498431
+        },
+        "1.0": {
+          "mean_error": 0.02315611606437875,
+          "std_error": 0.00264423974487018,
+          "median_error": 0.022837588656569804,
+          "mean_variance": 0.00016671019425267605,
+          "std_variance": 2.510028972979814e-05,
+          "rmse": 0.023306602391067875,
+          "estimates_mean": 0.1346950048846759,
+          "estimates_std": 0.00264423974487018
+        },
+        "1.5": {
+          "mean_error": 0.023384128164336583,
+          "std_error": 0.0023614677037228737,
+          "median_error": 0.023479514631941048,
+          "mean_variance": 0.00016397167111393692,
+          "std_variance": 2.214776804709522e-05,
+          "rmse": 0.023503063198694878,
+          "estimates_mean": 0.13446699278471808,
+          "estimates_std": 0.0023614677037228737
+        },
+        "2.0": {
+          "mean_error": 0.023622040243757497,
+          "std_error": 0.0023673936716339587,
+          "median_error": 0.024564763004506662,
+          "mean_variance": 0.00016172168505694735,
+          "std_variance": 2.2891695462481022e-05,
+          "rmse": 0.023740373587502604,
+          "estimates_mean": 0.13422908070529715,
+          "estimates_std": 0.0023673936716339587
+        }
+      },
+      "variance_reductions": {
+        "0.5": 0.836284564555668,
+        "1.0": 22.721700946491,
+        "1.5": 23.991139873301197,
+        "2.0": 25.034118055635567
+      },
+      "runtime_seconds": 0.9032697677612305
+    }
+  ],
+  "summary": {
+    "alpha_1.0": {
+      "mean_variance_reduction": 1.3093355658341856,
+      "ci_lower": -3.2982626562459547,
+      "ci_upper": 6.4208034874255056,
+      "min": -7.894573823750877,
+      "max": 22.721700946491,
+      "in_claimed_range": 

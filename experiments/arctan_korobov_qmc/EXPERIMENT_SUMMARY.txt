@@ -1,0 +1,88 @@
+================================================================================
+EXECUTIVE SUMMARY
+Arctan-Refined Curvature in Korobov Lattices for QMC
+Hypothesis Falsification Experiment
+================================================================================
+
+HYPOTHESIS:
+  Augmenting κ(n) with arctan(φ · frac(n/φ)) terms enhances Korobov
+  lattice parameter tuning, achieving 10-30% variance cuts in QMC for
+  periodic integrands via golden-ratio equidistribution.
+
+EXPERIMENTAL DESIGN:
+  - Total experiments: 8
+  - Bootstrap resamples: 1000
+  - Trials per test: 100
+  - Test functions: ProductCosine, SmoothPeriodic, MultiFrequency, Genz
+  - Dimensions tested: 2D, 3D
+  - Lattice sizes: 127, 251 points (prime)
+
+KEY FINDINGS:
+  Mean variance reduction (α=1.0): 0.61%
+  95% Confidence Interval: [-0.92%, 2.90%]
+  Range across experiments: [-2.07%, 8.15%]
+
+VERDICT:
+  ❌ HYPOTHESIS FALSIFIED
+
+  Reasons:
+    - Mean reduction 0.61% is OUTSIDE claimed [10%, 30%] range
+    - Confidence interval includes zero (not statistically significant)
+
+DETAILED RESULTS BY EXPERIMENT:
+
+1. ProductCosine-2D-127pts
+   Function: ProductCosine, Dimension: 2
+   Baseline mean error: 2.436735e-17
+   α=0.5: Variance reduction = +0.00%
+   α=1.0: Variance reduction = +0.00%
+   α=2.0: Variance reduction = +0.00%
+
+2. ProductCosine-2D-251pts
+   Function: ProductCosine, Dimension: 2
+   Baseline mean error: 4.267503e-17
+   α=0.5: Variance reduction = +0.00%
+   α=1.0: Variance reduction = +0.00%
+   α=2.0: Variance reduction = +0.00%
+
+3. ProductCosine-3D-127pts
+   Function: ProductCosine, Dimension: 3
+   Baseline mean error: 2.958031e-17
+   α=0.5: Variance reduction = +0.00%
+   α=1.0: Variance reduction = +0.00%
+   α=2.0: Variance reduction = -0.00%
+
+4. SmoothPeriodic-2D-127pts
+   Function: SmoothPeriodic, Dimension: 2
+   Baseline mean error: 1.043610e-16
+   α=0.5: Variance reduction = -1.65%
+   α=1.0: Variance reduction = -2.07%
+   α=2.0: Variance reduction = -2.07%
+
+5. SmoothPeriodic-2D-251pts
+   Function: SmoothPeriodic, Dimension: 2
+   Baseline mean error: 5.107026e-17
+   α=0.5: Variance reduction = +1.07%
+   α=1.0: Variance reduction = -0.08%
+   α=2.0: Variance reduction = -0.08%
+
+6. SmoothPeriodic-3D-127pts
+   Function: SmoothPeriodic, Dimension: 3
+   Baseline mean error: 1.043610e-16
+   α=0.5: Variance reduction = +0.57%
+   α=1.0: Variance reduction = -1.07%
+   α=2.0: Variance reduction = -1.07%
+
+7. MultiFrequency-2D-127pts
+   Function: MultiFrequencyCosine, Dimension: 2
+   Baseline mean error: 4.699762e-03
+   α=0.5: Variance reduction = -0.02%
+   α=1.0: Variance reduction = -0.08%
+   α=2.0: Variance reduction = -0.15%
+
+8. GenzContinuous-2D-127pts
+   Function: GenzContinuous, Dimension: 2
+   Baseline mean error: 2.142969e-02
+   α=0.5: Variance reduction = -0.73%
+   α=1.0: Variance reduction = +8.15%
+   α=2.0: Variance reduction = +3.34%
