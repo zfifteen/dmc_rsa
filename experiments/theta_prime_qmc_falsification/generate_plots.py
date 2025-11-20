@@ -6,7 +6,6 @@ Generate visualization plots for θ′-biased QMC falsification experiment
 import sys
 import os
 import numpy as np
-import pandas as pd
 import json
 from pathlib import Path
 
@@ -15,7 +14,6 @@ try:
     import matplotlib
     matplotlib.use('Agg')  # Non-interactive backend
     import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -23,7 +21,6 @@ except ImportError:
 
 def load_results():
     """Load all experimental results"""
-    results_dir = Path("results")
     deltas_dir = Path("deltas")
     
     results = []
@@ -40,7 +37,7 @@ def plot_unique_candidates_comparison(results, output_path):
     if not HAS_MATPLOTLIB:
         return
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     
     # Group by dataset
     rsa129 = [r for r in results if r['dataset'] == 'rsa-129']
@@ -102,7 +99,7 @@ def plot_delta_with_ci(results, output_path):
     if not HAS_MATPLOTLIB:
         return
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     
     # Group by dataset
     rsa129 = [r for r in results if r['dataset'] == 'rsa-129']
@@ -177,7 +174,7 @@ def plot_discrepancy_comparison(results, output_path):
     if not HAS_MATPLOTLIB:
         return
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     
     # Group by dataset
     rsa129 = [r for r in results if r['dataset'] == 'rsa-129']
@@ -268,9 +265,9 @@ def plot_summary_heatmap(results, output_path):
         # Add text annotations
         for i in range(len(alphas)):
             for j in range(len(sigmas)):
-                text = ax.text(j, i, f'{matrix[i, j]:.2f}%',
-                             ha="center", va="center", color="black", 
-                             fontsize=11, fontweight='bold')
+                ax.text(j, i, f'{matrix[i, j]:.2f}%',
+                       ha="center", va="center", color="black", 
+                       fontsize=11, fontweight='bold')
         
         # Colorbar
         cbar = plt.colorbar(im, ax=ax)

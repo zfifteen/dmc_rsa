@@ -17,20 +17,16 @@ import sys
 import os
 import numpy as np
 import pandas as pd
-from scipy import stats
 from scipy.stats import qmc, bootstrap
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, Tuple, Optional
 import time
 import json
-import warnings
 
 # Add parent directories to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from scripts.qmc_engines import QMCConfig, make_engine, compute_z_invariant_metrics
-from cognitive_number_theory import kappa
-from wave_crispr_signal import theta_prime, PHI
+from scripts.qmc_engines import compute_z_invariant_metrics
 
 
 # ============================================================================
@@ -254,8 +250,7 @@ def generate_qmc_candidates(n: int, n_samples: int, engine: str,
         candidates = np.zeros(n_samples, dtype=int)
         for i in range(n_samples):
             # Use deterministic φ-based perturbation
-            slot = i
-            u_biased = golden_u64(slot)
+            u_biased = golden_u64(i)
             
             # Mix with original sample using alpha
             u_final = (1 - alpha) * u_samples[i] + alpha * u_biased
@@ -340,9 +335,6 @@ def run_paired_experiment(config: ExperimentConfig) -> ExperimentResult:
     for rep in range(config.n_replicates):
         if (rep + 1) % 10 == 0:
             print(f"  Replicate {rep + 1}/{config.n_replicates}...", end='\r')
-        
-        # Extract drift slice for this replicate
-        drift_slice = master_drift[rep * config.n_samples:(rep + 1) * config.n_samples]
         
         # BASELINE: Monte Carlo with same drift
         t0 = time.time()
@@ -504,11 +496,21 @@ def convert_to_serializable(obj):
     """Convert object to JSON-serializable type"""
     import sympy
     if isinstance(obj, (np.integer, np.floating)):
-        return float(obj)
+        val = float(obj)
+        if np.isnan(val) or np.isinf(val):
+            return None
+        return val
+    elif isinstance(obj, float):
+        if np.isnan(obj) or np.isinf(obj):
+            return None
+        return obj
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, (sympy.Float, sympy.Integer)):
-        return float(obj)
+        val = float(obj)
+        if np.isnan(val) or np.isinf(val):
+            return None
+        return val
     elif isinstance(obj, dict):
         return {k: convert_to_serializable(v) for k, v in obj.items()}
     elif isinstance(obj, list):
@@ -519,8 +521,11 @@ def convert_to_serializable(obj):
         return obj
     else:
         try:
-            return float(obj)
-        except:
+            val = float(obj)
+            if np.isnan(val) or np.isinf(val):
+                return None
+            return val
+        except Exception:
             return str(obj)
 
 
@@ -639,12 +644,6 @@ def main():
     
     # RSA-155: For testing, use larger semiprime
     rsa_155_test = 10403  # 101 * 103
-    
-    # Alpha sweep: [0.05, 0.1, 0.15, 0.2]
-    alphas = [0.05, 0.1, 0.15, 0.2]
-    
-    # Sigma sweep: [1, 10, 50, 100] ms
-    sigmas = [1, 10, 50, 100]
     
     # Create experiment grid (subset for demonstration)
     for dataset_name, n_value in [('rsa-129', rsa_129_test), ('rsa-155', rsa_155_test)]:
