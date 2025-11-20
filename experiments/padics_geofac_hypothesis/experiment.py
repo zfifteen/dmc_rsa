@@ -31,7 +31,7 @@ from experiments.padics_geofac_hypothesis.padic import (
     p_adic_norm, is_ultrametric_valid, compute_cauchy_sequence_convergence,
     analyze_geofac_spine, demonstrate_descent_chain, hensel_lift
 )
-from wave_crispr_signal import theta_prime, K_Z5D, PHI
+from wave_crispr_signal import theta_prime, K_Z5D
 from cognitive_number_theory import kappa
 
 

@@ -14,13 +14,12 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 from experiments.padics_geofac_hypothesis.padic import (
-    p_adic_valuation, p_adic_distance, p_adic_expansion,
+    p_adic_distance, p_adic_expansion,
     analyze_geofac_spine, demonstrate_descent_chain,
     compute_cauchy_sequence_convergence
 )
@@ -37,7 +36,7 @@ def plot_distance_comparison(n_range, p, output_file):
     padic_dists = [p_adic_distance(n, reference, p) if n != reference else 0 
                    for n in numbers]
     
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+    _, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
     
     # Euclidean distance
     ax1.plot(numbers, euclidean_dists, 'b-', linewidth=2, label='Euclidean distance')
@@ -107,7 +106,7 @@ def plot_descent_convergence(start, p, steps, output_file):
     chain = demonstrate_descent_chain(start, p, steps)
     distances = compute_cauchy_sequence_convergence(chain, p)
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     
     # Sequence values
     ax1.plot(range(len(chain)), chain, 'bo-', linewidth=2, markersize=6)
@@ -137,12 +136,11 @@ def plot_geofac_spine(n, p, max_level, output_file):
     spine = analyze_geofac_spine(n, p, max_level)
     expansion = p_adic_expansion(n, p, max_level)
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     
     # Spine residues
     levels = [s[0] for s in spine]
     residues = [s[1] for s in spine]
-    norms = [s[2] for s in spine]
     
     ax1.bar(levels, residues, color='steelblue', alpha=0.7, edgecolor='black')
     ax1.set_xlabel(f'Level k (mod {p}^k)')

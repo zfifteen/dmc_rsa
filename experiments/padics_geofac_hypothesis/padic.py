@@ -12,7 +12,6 @@ Key concepts:
 - Hensel lifting: lifting solutions from ℤ/p^k to ℤ/p^(k+1)
 """
 
-import numpy as np
 from typing import List, Tuple, Optional
 import sympy
 

@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 from experiments.padics_geofac_hypothesis.padic import (
     p_adic_valuation, p_adic_distance, p_adic_expansion,
-    p_adic_from_expansion, p_adic_norm, is_ultrametric_valid,
+    p_adic_from_expansion, is_ultrametric_valid,
     compute_cauchy_sequence_convergence, hensel_lift
 )
 
