@@ -16,7 +16,7 @@ Key features:
 
 - QMC provides measurable improvements over MC: 1.03× to 1.34× better unique candidates
 - Improvements scale with semiprime size
-- φ-bias currently reduces performance (needs refinement)
+- **⚠️ θ′-bias falsified**: Rigorous experiment shows θ′-biased QMC **reduces** unique candidates by 0.2-4.8% (see `experiments/theta_prime_qmc_falsification/`)
 - Statistical significance confirmed with 1000 trials and 95% CIs
 
 **New: Enhanced QMC Capabilities (October 2025)**
@@ -112,6 +112,15 @@ For detailed results, see [docs/QMC_RSA_SUMMARY.md](docs/QMC_RSA_SUMMARY.md).
 │   └── test_*.py                     # Various test suites
 ├── reports/
 │   └── qmc_statistical_results_899.csv  # Benchmark results for N=899
+├── experiments/                      # Experimental validations (NEW)
+│   └── theta_prime_qmc_falsification/  # θ′-biased QMC falsification experiment
+│       ├── EXECUTIVE_SUMMARY.md        # Experiment results summary
+│       ├── METHODOLOGY.md              # Detailed methodology
+│       ├── README.md                   # Quick start guide
+│       ├── qmc_factorization_experiment.py  # Main experiment script
+│       ├── verify_results.py           # Result verification
+│       ├── results/*.csv               # Per-replicate data (8 configs)
+│       └── deltas/*.json               # Summary metrics with CI (8 configs)
 ├── ELLIPTIC_INTEGRATION_SUMMARY.md  # Elliptic geometry integration summary
 └── README.md
 ```
