@@ -1,0 +1,51 @@
+{
+  "dataset": "rsa-155",
+  "n_value": 10403,
+  "engine": "sobol_owen",
+  "bias_mode": "theta_prime",
+  "n_samples": 1000,
+  "n_replicates": 100,
+  "alpha": 0.2,
+  "sigma_ms": 10,
+  "delta_unique": {
+    "mean": -9.54,
+    "ci_low": -9.973694434667896,
+    "ci_high": -9.16,
+    "pct": -4.8033835154322535
+  },
+  "delta_steps": {
+    "mean": 0.0,
+    "ci_low": NaN,
+    "ci_high": NaN,
+    "pct": 0.0
+  },
+  "baseline_metrics": {
+    "mean_unique": 198.61,
+    "std_unique": 1.1823282116231517,
+    "mean_time": 0.00010612964630126953
+  },
+  "policy_metrics": {
+    "mean_unique": 189.07,
+    "std_unique": 1.8398641254179617,
+    "mean_time": 0.004783968925476074
+  },
+  "z_metrics_baseline": {
+    "method": "mc_baseline",
+    "n_samples": 1000.0,
+    "dimensions": 1.0,
+    "discrepancy": 0.5719440532080099,
+    "unique_rate": 0.198,
+    "mean_kappa": 5.791993710456382,
+    "savings_estimate": 3.5778657935235127
+  },
+  "z_metrics_policy": {
+    "method": "sobol_owen_theta_prime",
+    "n_samples": 1000.0,
+    "dimensions": 1.0,
+    "discrepancy": 0.5980376242344593,
+    "unique_rate": 0.187,
+    "mean_kappa": 5.791993710456382,
+    "savings_estimate": 3.5778657935235127
+  },
+  "execution_time": 0.5832083225250244
+}
