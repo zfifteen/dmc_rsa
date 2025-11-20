@@ -1,0 +1,394 @@
+
+⚡ QUICK MODE: Reduced trials and bootstrap for faster testing
+======================================================================
+ARCTAN-REFINED KOROBOV LATTICE EXPERIMENT
+Hypothesis Falsification Study
+======================================================================
+
+Start time: 2025-11-20 17:40:43
+Configuration:
+  Bootstrap resamples: 100
+  Trials per test: 20
+  Random seed: 42
+
+======================================================================
+Experiment 1/8: ProductCosine-2D-127pts
+======================================================================
+
+Running integration tests (n_trials=20)...
+
+Results for ProductCosine-2D-127pts:
+  Function: ProductCosine, Dimension: 2
+  Lattice points: 127 (prime)
+  Analytical integral: 0.0
+
+  Baseline (α=0.0):
+    Mean error:    2.167440e-17
+    Std error:     1.714311e-17
+    Mean variance: 1.968504e-03
+    RMSE:          2.763450e-17
+
+  Arctan-Refined (α=0.5):
+    Mean error:    2.816057e-17
+    Mean variance: 1.968504e-03
+    Variance reduction: +0.00%
+    Error reduction:    -29.93%
+
+  Arctan-Refined (α=1.0):
+    Mean error:    8.326126e-17
+    Mean variance: 1.968504e-03
+    Variance reduction: +0.00%
+    Error reduction:    -284.15%
+
+  Arctan-Refined (α=1.5):
+    Mean error:    7.534437e-17
+    Mean variance: 1.968504e-03
+    Variance reduction: -0.00%
+    Error reduction:    -247.62%
+
+  Arctan-Refined (α=2.0):
+    Mean error:    4.478455e-17
+    Mean variance: 1.968504e-03
+    Variance reduction: -0.00%
+    Error reduction:    -106.62%
+
+Experiment completed in 0.93s
+
+======================================================================
+Experiment 2/8: ProductCosine-2D-251pts
+======================================================================
+
+Running integration tests (n_trials=20)...
+
+Results for ProductCosine-2D-251pts:
+  Function: ProductCosine, Dimension: 2
+  Lattice points: 251 (prime)
+  Analytical integral: 0.0
+
+  Baseline (α=0.0):
+    Mean error:    2.976813e-17
+    Std error:     2.518549e-17
+    Mean variance: 9.960159e-04
+    RMSE:          3.899295e-17
+
+  Arctan-Refined (α=0.5):
+    Mean error:    4.670898e-17
+    Mean variance: 9.960159e-04
+    Variance reduction: +0.00%
+    Error reduction:    -56.91%
+
+  Arctan-Refined (α=1.0):
+    Mean error:    7.836250e-17
+    Mean variance: 9.960159e-04
+    Variance reduction: +0.00%
+    Error reduction:    -163.24%
+
+  Arctan-Refined (α=1.5):
+    Mean error:    7.630710e-17
+    Mean variance: 9.960159e-04
+    Variance reduction: +0.00%
+    Error reduction:    -156.34%
+
+  Arctan-Refined (α=2.0):
+    Mean error:    8.019813e-17
+    Mean variance: 9.960159e-04
+    Variance reduction: +0.00%
+    Error reduction:    -169.41%
+
+Experiment completed in 1.80s
+
+======================================================================
+Experiment 3/8: ProductCosine-3D-127pts
+======================================================================
+
+Running integration tests (n_trials=20)...
+
+Results for ProductCosine-3D-127pts:
+  Function: ProductCosine, Dimension: 3
+  Lattice points: 127 (prime)
+  Analytical integral: 0.0
+
+  Baseline (α=0.0):
+    Mean error:    2.935371e-17
+    Std error:     2.352624e-17
+    Mean variance: 9.842520e-04
+    RMSE:          3.761814e-17
+
+  Arctan-Refined (α=0.5):
+    Mean error:    2.440292e-17
+    Mean variance: 9.842520e-04
+    Variance reduction: +0.00%
+    Error reduction:    +16.87%
+
+  Arctan-Refined (α=1.0):
+    Mean error:    6.924648e-17
+    Mean variance: 9.842520e-04
+    Variance reduction: +0.00%
+    Error reduction:    -135.90%
+
+  Arctan-Refined (α=1.5):
+    Mean error:    5.531288e-17
+    Mean variance: 9.842520e-04
+    Variance reduction: +0.00%
+    Error reduction:    -88.44%
+
+  Arctan-Refined (α=2.0):
+    Mean error:    5.754320e-17
+    Mean variance: 9.842520e-04
+    Variance reduction: +0.00%
+    Error reduction:    -96.03%
+
+Experiment completed in 0.91s
+
+======================================================================
+Experiment 4/8: SmoothPeriodic-2D-127pts
+======================================================================
+
+Running integration tests (n_trials=20)...
+
+Results for SmoothPeriodic-2D-127pts:
+  Function: SmoothPeriodic, Dimension: 2
+  Lattice points: 127 (prime)
+  Analytical integral: 1.0
+
+  Baseline (α=0.0):
+    Mean error:    8.326673e-17
+    Std error:     9.205483e-17
+    Mean variance: 2.057364e-03
+    RMSE:          1.241267e-16
+
+  Arctan-Refined (α=0.5):
+    Mean error:    1.276756e-16
+    Mean variance: 2.036973e-03
+    Variance reduction: +0.99%
+    Error reduction:    -53.33%
+
+  Arctan-Refined (α=1.0):
+    Mean error:    8.881784e-17
+    Mean variance: 2.091535e-03
+    Variance reduction: -1.66%
+    Error reduction:    -6.67%
+
+  Arctan-Refined (α=1.5):
+    Mean error:    9.992007e-17
+    Mean variance: 2.091535e-03
+    Variance reduction: -1.66%
+    Error reduction:    -20.00%
+
+  Arctan-Refined (α=2.0):
+    Mean error:    1.276756e-16
+    Mean variance: 2.091535e-03
+    Variance reduction: -1.66%
+    Error reduction:    -53.33%
+
+Experiment completed in 0.90s
+
+======================================================================
+Experiment 5/8: SmoothPeriodic-2D-251pts
+======================================================================
+
+Running integration tests (n_trials=20)...
+
+Results for SmoothPeriodic-2D-251pts:
+  Function: SmoothPeriodic, Dimension: 2
+  Lattice points: 251 (prime)
+  Analytical integral: 1.0
+
+  Baseline (α=0.0):
+    Mean error:    6.661338e-17
+    Std error:     8.158440e-17
+    Mean variance: 9.808342e-04
+    RMSE:          1.053250e-16
+
+  Arctan-Refined (α=0.5):
+    Mean error:    6.106227e-17
+    Mean variance: 1.074680e-03
+    Variance reduction: -9.57%
+    Error reduction:    +8.33%
+
+  Arctan-Refined (α=1.0):
+    Mean error:    8.326673e-17
+    Mean variance: 1.058267e-03
+    Variance reduction: -7.89%
+    Error reduction:    -25.00%
+
+  Arctan-Refined (α=1.5):
+    Mean error:    7.216450e-17
+    Mean variance: 1.058267e-03
+    Variance reduction: -7.89%
+    Error reduction:    -8.33%
+
+  Arctan-Refined (α=2.0):
+    Mean error:    8.881784e-17
+    Mean variance: 1.058267e-03
+    Variance reduction: -7.89%
+    Error reduction:    -33.33%
+
+Experiment completed in 1.78s
+
+======================================================================
+Experiment 6/8: SmoothPeriodic-3D-127pts
+======================================================================
+
+Running integration tests (n_trials=20)...
+
+Results for SmoothPeriodic-3D-127pts:
+  Function: SmoothPeriodic, Dimension: 3
+  Lattice points: 127 (prime)
+  Analytical integral: 1.0
+
+  Baseline (α=0.0):
+    Mean error:    1.110223e-16
+    Std error:     8.599751e-17
+    Mean variance: 3.242907e-03
+    RMSE:          1.404333e-16
+
+  Arctan-Refined (α=0.5):
+    Mean error:    1.054712e-16
+    Mean variance: 3.368271e-03
+    Variance reduction: -3.87%
+    Error reduction:    +5.00%
+
+  Arctan-Refined (α=1.0):
+    Mean error:    1.776357e-16
+    Mean variance: 3.337229e-03
+    Variance reduction: -2.91%
+    Error reduction:    -60.00%
+
+  Arctan-Refined (α=1.5):
+    Mean error:    1.609823e-16
+    Mean variance: 3.337229e-03
+    Variance reduction: -2.91%
+    Error reduction:    -45.00%
+
+  Arctan-Refined (α=2.0):
+    Mean error:    9.436896e-17
+    Mean variance: 3.337229e-03
+    Variance reduction: -2.91%
+    Error reduction:    +15.00%
+
+Experiment completed in 0.90s
+
+======================================================================
+Experiment 7/8: MultiFrequency-2D-127pts
+======================================================================
+
+Running integration tests (n_trials=20)...
+
+Results for MultiFrequency-2D-127pts:
+  Function: MultiFrequencyCosine, Dimension: 2
+  Lattice points: 127 (prime)
+  Analytical integral: 0.0
+
+  Baseline (α=0.0):
+    Mean error:    4.826236e-03
+    Std error:     2.123812e-03
+    Mean variance: 3.942700e-03
+    RMSE:          5.272867e-03
+
+  Arctan-Refined (α=0.5):
+    Mean error:    4.572691e-03
+    Mean variance: 3.930606e-03
+    Variance reduction: +0.31%
+    Error reduction:    +5.25%
+
+  Arctan-Refined (α=1.0):
+    Mean error:    5.093961e-03
+    Mean variance: 3.934143e-03
+    Variance reduction: +0.22%
+    Error reduction:    -5.55%
+
+  Arctan-Refined (α=1.5):
+    Mean error:    4.798784e-03
+    Mean variance: 3.937098e-03
+    Variance reduction: +0.14%
+    Error reduction:    +0.57%
+
+  Arctan-Refined (α=2.0):
+    Mean error:    5.328156e-03
+    Mean variance: 3.933362e-03
+    Variance reduction: +0.24%
+    Error reduction:    -10.40%
+
+Experiment completed in 0.90s
+
+======================================================================
+Experiment 8/8: GenzContinuous-2D-127pts
+======================================================================
+
+Running integration tests (n_trials=20)...
+
+Results for GenzContinuous-2D-127pts:
+  Function: GenzContinuous, Dimension: 2
+  Lattice points: 127 (prime)
+  Analytical integral: 0.15785112094905465
+
+  Baseline (α=0.0):
+    Mean error:    1.737027e-02
+    Std error:     1.164774e-02
+    Mean variance: 2.157270e-04
+    RMSE:          2.091401e-02
+
+  Arctan-Refined (α=0.5):
+    Mean error:    1.749836e-02
+    Mean variance: 2.139230e-04
+    Variance reduction: +0.84%
+    Error reduction:    -0.74%
+
+  Arctan-Refined (α=1.0):
+    Mean error:    2.315612e-02
+    Mean variance: 1.667102e-04
+    Variance reduction: +22.72%
+    Error reduction:    -33.31%
+
+  Arctan-Refined (α=1.5):
+    Mean error:    2.338413e-02
+    Mean variance: 1.639717e-04
+    Variance reduction: +23.99%
+    Error reduction:    -34.62%
+
+  Arctan-Refined (α=2.0):
+    Mean error:    2.362204e-02
+    Mean variance: 1.617217e-04
+    Variance reduction: +25.03%
+    Error reduction:    -35.99%
+
+Experiment completed in 0.90s
+
+======================================================================
+SUMMARY ANALYSIS
+======================================================================
+
+Variance Reduction at α=1.0 (across all experiments):
+  Mean:  1.31%
+  95% CI: [-3.30%, 6.42%]
+  Range: [-7.89%, 22.72%]
+
+Hypothesis Check (α=1.0):
+  Claimed range: 10-30% variance reduction
+  Mean in range: False
+  CI overlaps zero: True
+  ❌ HYPOTHESIS FALSIFIED: Mean reduction 1.31% outside [10%, 30%]
+
+End time: 2025-11-20 17:40:52
+Traceback (most recent call last):
+  File "/home/runner/work/dmc_rsa/dmc_rsa/experiments/arctan_korobov_qmc/run_experiment.py", line 402, in <module>
+    save_results(results, results_path)
+  File "/home/runner/work/dmc_rsa/dmc_rsa/experiments/arctan_korobov_qmc/run_experiment.py", line 272, in save_results
+    json.dump(results, f, indent=2)
+  File "/usr/lib/python3.12/json/__init__.py", line 179, in dump
+    for chunk in iterable:
+  File "/usr/lib/python3.12/json/encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/usr/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type bool is not JSON serializable
